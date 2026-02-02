@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/property.dart';
 import '../services/firebase_service.dart';
 import '../services/location_service.dart';
@@ -17,6 +20,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   final _formKey = GlobalKey<FormState>();
   final FirebaseService _firebaseService = FirebaseService();
   final LocationService _locationService = LocationService();
+  final ImagePicker _picker = ImagePicker();
 
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -28,12 +32,12 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   String? _selectedCity;
   int _bedrooms = 1;
   int _bathrooms = 1;
-  double _area = 0;
   PropertyType _type = PropertyType.piso;
   bool _isForRent = false;
 
   List<String> _provinces = [];
   List<String> _municipios = [];
+  List<String> _base64Images = []; // Lista para almacenar fotos en Base64
   bool _isLoadingLocations = true;
 
   bool get _isEditing => widget.propertyToEdit != null;
@@ -60,6 +64,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
       _bathrooms = p.bathrooms;
       _type = p.type;
       _isForRent = p.isForRent;
+      _base64Images = List.from(p.images); // Cargar imágenes existentes
       
       if (_selectedProvince != null) {
         _municipios = _locationService.getMunicipios(_selectedProvince!);
@@ -69,6 +74,35 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     setState(() {
       _provinces = _locationService.getProvinces();
       _isLoadingLocations = false;
+    });
+  }
+
+  Future<void> _pickImage() async {
+    if (_base64Images.length >= 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Máximo 5 fotos por anuncio')),
+      );
+      return;
+    }
+
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50, // Comprimimos para que el Base64 no sea gigante
+      maxWidth: 800,
+    );
+
+    if (image != null) {
+      final bytes = await File(image.path).readAsBytes();
+      final base64String = base64Encode(bytes);
+      setState(() {
+        _base64Images.add(base64String);
+      });
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _base64Images.removeAt(index);
     });
   }
 
@@ -92,7 +126,6 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     }
 
     if (_formKey.currentState!.validate() && _selectedProvince != null && _selectedCity != null) {
-      
       final property = Property(
         id: _isEditing ? widget.propertyToEdit!.id : '', 
         userId: user.uid,
@@ -105,7 +138,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         bedrooms: _bedrooms,
         bathrooms: _bathrooms,
         area: double.parse(_areaController.text),
-        images: _isEditing ? widget.propertyToEdit!.images : [], 
+        images: _base64Images, 
         type: _type,
         isForRent: _isForRent,
       );
@@ -146,7 +179,59 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
             child: Form(
               key: _formKey,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Selector de Imágenes
+                  const Text('Fotos del inmueble (Máx. 5)', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 100,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _base64Images.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == _base64Images.length) {
+                          return GestureDetector(
+                            onTap: _pickImage,
+                            child: Container(
+                              width: 100,
+                              margin: const EdgeInsets.only(right: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.grey[400]!),
+                              ),
+                              child: const Icon(Icons.add_a_photo, color: Colors.blueAccent),
+                            ),
+                          );
+                        }
+                        return Stack(
+                          children: [
+                            Container(
+                              width: 100,
+                              margin: const EdgeInsets.only(right: 10),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                image: DecorationImage(
+                                  image: MemoryImage(base64Decode(_base64Images[index])),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              right: 5,
+                              top: -5,
+                              child: IconButton(
+                                icon: const Icon(Icons.cancel, color: Colors.red),
+                                onPressed: () => _removeImage(index),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   TextFormField(
                     controller: _titleController,
                     decoration: const InputDecoration(labelText: 'Título'),
@@ -211,9 +296,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                         child: DropdownButtonFormField<int>(
                           value: _bedrooms,
                           decoration: const InputDecoration(labelText: 'Habitaciones'),
-                          items: List.generate(10, (index) => index + 1)
-                              .map((val) => DropdownMenuItem(value: val, child: Text('$val')))
-                              .toList(),
+                          items: List.generate(10, (index) => index + 1).map((val) => DropdownMenuItem(value: val, child: Text('$val'))).toList(),
                           onChanged: (val) => setState(() => _bedrooms = val!),
                         ),
                       ),
@@ -222,9 +305,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                         child: DropdownButtonFormField<int>(
                           value: _bathrooms,
                           decoration: const InputDecoration(labelText: 'Baños'),
-                          items: List.generate(6, (index) => index + 1)
-                              .map((val) => DropdownMenuItem(value: val, child: Text('$val')))
-                              .toList(),
+                          items: List.generate(6, (index) => index + 1).map((val) => DropdownMenuItem(value: val, child: Text('$val'))).toList(),
                           onChanged: (val) => setState(() => _bathrooms = val!),
                         ),
                       ),

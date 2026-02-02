@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/property.dart';
 
@@ -18,13 +19,19 @@ class PropertyCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image placeholder
+            // Contenedor de la imagen
             Container(
               height: 200,
               width: double.infinity,
               color: Colors.grey[300],
               child: property.images.isNotEmpty
-                  ? Image.network(property.images[0], fit: BoxFit.cover)
+                  ? Image.memory(
+                      base64Decode(property.images[0]),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(child: Icon(Icons.broken_image, size: 50));
+                      },
+                    )
                   : const Icon(Icons.home, size: 50, color: Colors.white),
             ),
             Padding(
@@ -47,7 +54,7 @@ class PropertyCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${property.city} - ${property.address}',
+                    '${property.city} - ${property.province}',
                     style: TextStyle(color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 8),

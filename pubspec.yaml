@@ -16,6 +16,7 @@ dependencies:
   firebase_auth: ^5.4.0
   device_preview: ^1.2.0
   csv: ^6.0.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

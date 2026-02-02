@@ -1,13 +1,24 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/property.dart';
 
-class PropertyDetailScreen extends StatelessWidget {
+class PropertyDetailScreen extends StatefulWidget {
   final Property property;
 
   const PropertyDetailScreen({super.key, required this.property});
 
   @override
+  State<PropertyDetailScreen> createState() => _PropertyDetailScreenState();
+}
+
+class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
   Widget build(BuildContext context) {
+    final property = widget.property;
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -15,12 +26,91 @@ class PropertyDetailScreen extends StatelessWidget {
             expandedHeight: 300,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(property.title, style: const TextStyle(fontSize: 16)),
-              background: Container(
-                color: Colors.grey[300],
-                child: property.images.isNotEmpty
-                    ? Image.network(property.images[0], fit: BoxFit.cover)
-                    : const Icon(Icons.home, size: 100, color: Colors.white),
+              background: Stack(
+                children: [
+                  // Carrusel de Imágenes
+                  if (property.images.isNotEmpty)
+                    PageView.builder(
+                      controller: _pageController,
+                      onPageChanged: (index) {
+                        setState(() {
+                          _currentPage = index;
+                        });
+                      },
+                      itemCount: property.images.length,
+                      itemBuilder: (context, index) {
+                        return Image.memory(
+                          base64Decode(property.images[index]),
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        );
+                      },
+                    )
+                  else
+                    Container(
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.home, size: 100, color: Colors.white),
+                    ),
+                  
+                  // Flechas de navegación
+                  if (property.images.length > 1) ...[
+                    Positioned(
+                      left: 10,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 30),
+                          onPressed: () {
+                            _pageController.previousPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      right: 10,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 30),
+                          onPressed: () {
+                            _pageController.nextPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  // Indicador de página (opcional)
+                  if (property.images.length > 1)
+                    Positioned(
+                      bottom: 20,
+                      left: 0,
+                      right: 0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          property.images.length,
+                          (index) => Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _currentPage == index ? Colors.white : Colors.white54,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -50,7 +140,7 @@ class PropertyDetailScreen extends StatelessWidget {
                       children: [
                         _FeatureIcon(icon: Icons.king_bed, label: '${property.bedrooms} hab.'),
                         _FeatureIcon(icon: Icons.bathtub, label: '${property.bathrooms} baños'),
-                        _FeatureIcon(icon: Icons.square_foot, label: '${property.area} m²'),
+                        _FeatureIcon(icon: Icons.square_foot, label: '${property.area.toStringAsFixed(0)} m²'),
                       ],
                     ),
                     const Divider(height: 32),
@@ -63,7 +153,7 @@ class PropertyDetailScreen extends StatelessWidget {
                       property.description,
                       style: const TextStyle(fontSize: 16, height: 1.5),
                     ),
-                    const SizedBox(height: 100), // Space for button
+                    const SizedBox(height: 100), 
                   ],
                 ),
               ),
@@ -74,7 +164,7 @@ class PropertyDetailScreen extends StatelessWidget {
       bottomSheet: Container(
         padding: const EdgeInsets.all(16),
         width: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
         ),
