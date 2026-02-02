@@ -6,17 +6,28 @@ class FirebaseService {
 
   CollectionReference get _propertiesRef => _db.collection('properties');
 
-  // Obtener todas las propiedades para la Home
-  Stream<List<Property>> getProperties() {
-    return _propertiesRef.snapshots().map((snapshot) {
-      print("FIREBASE: Recibidos ${snapshot.docs.length} documentos de la colección 'properties'");
+  // Obtener propiedades por ubicación exacta
+  Stream<List<Property>> getPropertiesByLocation(String province, String city) {
+    return _propertiesRef
+        .where('province', isEqualTo: province)
+        .where('city', isEqualTo: city)
+        .snapshots()
+        .map((snapshot) {
       return snapshot.docs.map((doc) {
         return Property.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).toList();
     });
   }
 
-  // Obtener solo las propiedades de un usuario
+  // Obtener todas las propiedades (mantenemos por compatibilidad)
+  Stream<List<Property>> getProperties() {
+    return _propertiesRef.snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return Property.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+      }).toList();
+    });
+  }
+
   Stream<List<Property>> getPropertiesForUser(String userId) {
     return _propertiesRef
         .where('userId', isEqualTo: userId)
@@ -28,7 +39,7 @@ class FirebaseService {
     });
   }
 
-  // BÚSQUEDA CON FILTROS
+  // Búsqueda con filtros complejos
   Stream<List<Property>> searchProperties({
     required String city,
     required double minPrice,
@@ -38,41 +49,24 @@ class FirebaseService {
     PropertyType? type,
     required bool isForRent,
   }) {
-    print("FIREBASE: Iniciando búsqueda con filtros...");
-    print("Filtros: Ciudad=$city, Precio=$minPrice-$maxPrice, Alquiler=$isForRent, Tipo=$type");
-
     Query query = _propertiesRef;
-
     query = query.where('isForRent', isEqualTo: isForRent);
-    
-    if (city.isNotEmpty) {
-      query = query.where('city', isEqualTo: city);
-    }
-    
-    if (type != null) {
-      query = query.where('type', isEqualTo: type.index);
-    }
-
+    if (city.isNotEmpty) query = query.where('city', isEqualTo: city);
+    if (type != null) query = query.where('type', isEqualTo: type.index);
     query = query.where('price', isGreaterThanOrEqualTo: minPrice)
                  .where('price', isLessThanOrEqualTo: maxPrice);
 
     return query.snapshots().map((snapshot) {
-      final results = snapshot.docs.map((doc) {
+      return snapshot.docs.map((doc) {
         return Property.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).where((p) {
         return p.bedrooms >= minBedrooms && p.bathrooms >= minBathrooms;
       }).toList();
-      
-      return results;
     });
   }
 
   Future<void> addProperty(Property property) async {
-    try {
-      await _propertiesRef.add(property.toMap());
-    } catch (e) {
-      rethrow;
-    }
+    await _propertiesRef.add(property.toMap());
   }
 
   Future<void> updateProperty(Property property) {
