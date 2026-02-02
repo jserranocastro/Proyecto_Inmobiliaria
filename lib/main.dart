@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:device_preview/device_preview.dart';
 import 'screens/main_screen.dart';
 import 'firebase_options.dart'; 
 
@@ -10,7 +12,12 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const RealEstateApp());
+  runApp(
+    DevicePreview(
+      enabled: !kReleaseMode,
+      builder: (context) => const RealEstateApp(),
+    ),
+  );
 }
 
 class RealEstateApp extends StatelessWidget {
@@ -21,6 +28,9 @@ class RealEstateApp extends StatelessWidget {
     return MaterialApp(
       title: 'Inmobiliaria TFG',
       debugShowCheckedModeBanner: false,
+      useInheritedMediaQuery: true, // Importante para DevicePreview
+      locale: DevicePreview.locale(context), // Importante para DevicePreview
+      builder: DevicePreview.appBuilder, // Importante para DevicePreview
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blueAccent,

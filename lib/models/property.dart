@@ -1,4 +1,4 @@
-enum PropertyType { house, apartment, land, commercial }
+enum PropertyType { chalet, piso, casa, atico, duplex }
 
 class Property {
   final String id;
@@ -9,7 +9,7 @@ class Property {
   final String city;
   final int bedrooms;
   final int bathrooms;
-  final double area; // in square meters
+  final double area; 
   final List<String> images;
   final PropertyType type;
   final bool isForRent;
@@ -29,7 +29,6 @@ class Property {
     required this.isForRent,
   });
 
-  // Future method for Firestore
   Map<String, dynamic> toMap() {
     return {
       'title': title,
@@ -47,18 +46,26 @@ class Property {
   }
 
   factory Property.fromMap(String id, Map<String, dynamic> map) {
+    // Intentamos obtener el tipo de forma segura
+    int typeIndex = 0;
+    if (map['type'] != null) {
+      int val = (map['type'] as num).toInt();
+      // Si el índice es válido para nuestro enum actual, lo usamos. Si no, ponemos 0 (chalet)
+      typeIndex = (val >= 0 && val < PropertyType.values.length) ? val : 0;
+    }
+
     return Property(
       id: id,
-      title: map['title'] ?? '',
-      description: map['description'] ?? '',
+      title: map['title']?.toString() ?? 'Sin título',
+      description: map['description']?.toString() ?? '',
       price: (map['price'] ?? 0).toDouble(),
-      address: map['address'] ?? '',
-      city: map['city'] ?? '',
-      bedrooms: map['bedrooms'] ?? 0,
-      bathrooms: map['bathrooms'] ?? 0,
+      address: map['address']?.toString() ?? '',
+      city: map['city']?.toString() ?? '',
+      bedrooms: (map['bedrooms'] ?? 0).toInt(),
+      bathrooms: (map['bathrooms'] ?? 0).toInt(),
       area: (map['area'] ?? 0).toDouble(),
-      images: List<String>.from(map['images'] ?? []),
-      type: PropertyType.values[map['type'] ?? 0],
+      images: map['images'] != null ? List<String>.from(map['images']) : [],
+      type: PropertyType.values[typeIndex],
       isForRent: map['isForRent'] ?? false,
     );
   }

@@ -18,10 +18,10 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   double _price = 0;
   String _address = '';
   String _city = '';
-  int _bedrooms = 0;
-  int _bathrooms = 0;
+  int _bedrooms = 1;
+  int _bathrooms = 1;
   double _area = 0;
-  PropertyType _type = PropertyType.apartment;
+  PropertyType _type = PropertyType.piso;
   bool _isForRent = false;
 
   void _saveProperty() async {
@@ -38,7 +38,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         bedrooms: _bedrooms,
         bathrooms: _bathrooms,
         area: _area,
-        images: [], // Images implementation can be added later
+        images: [], 
         type: _type,
         isForRent: _isForRent,
       );
@@ -107,30 +107,42 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                 decoration: const InputDecoration(labelText: 'Dirección'),
                 onSaved: (value) => _address = value!,
               ),
+              const SizedBox(height: 15),
               Row(
                 children: [
+                  // Desplegable Habitaciones
                   Expanded(
-                    child: TextFormField(
+                    child: DropdownButtonFormField<int>(
+                      value: _bedrooms,
                       decoration: const InputDecoration(labelText: 'Habitaciones'),
-                      keyboardType: TextInputType.number,
-                      onSaved: (value) => _bedrooms = int.parse(value ?? '0'),
+                      items: List.generate(10, (index) => index + 1)
+                          .map((val) => DropdownMenuItem(value: val, child: Text('$val')))
+                          .toList(),
+                      onChanged: (val) => setState(() => _bedrooms = val!),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 15),
+                  // Desplegable Baños
                   Expanded(
-                    child: TextFormField(
+                    child: DropdownButtonFormField<int>(
+                      value: _bathrooms,
                       decoration: const InputDecoration(labelText: 'Baños'),
-                      keyboardType: TextInputType.number,
-                      onSaved: (value) => _bathrooms = int.parse(value ?? '0'),
+                      items: List.generate(6, (index) => index + 1)
+                          .map((val) => DropdownMenuItem(value: val, child: Text('$val')))
+                          .toList(),
+                      onChanged: (val) => setState(() => _bathrooms = val!),
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 15),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Área (m²)'),
                 keyboardType: TextInputType.number,
                 onSaved: (value) => _area = double.parse(value ?? '0'),
               ),
+              const SizedBox(height: 15),
+              // Desplegable Tipo de Vivienda actualizado
               DropdownButtonFormField<PropertyType>(
                 value: _type,
                 decoration: const InputDecoration(labelText: 'Tipo de inmueble'),
@@ -147,7 +159,11 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _saveProperty,
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(15)),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.all(15),
+                    backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.white,
+                  ),
                   child: const Text('Guardar Inmueble', style: TextStyle(fontSize: 18)),
                 ),
               ),

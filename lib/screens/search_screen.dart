@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/property.dart';
+import 'search_results_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -27,7 +28,6 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Búsqueda por Ciudad
             TextField(
               decoration: const InputDecoration(
                 labelText: 'Ciudad',
@@ -37,8 +37,6 @@ class _SearchScreenState extends State<SearchScreen> {
               onChanged: (value) => setState(() => _city = value),
             ),
             const SizedBox(height: 25),
-
-            // Filtro de Precio
             const Text('Rango de precio (€)', style: TextStyle(fontWeight: FontWeight.bold)),
             RangeSlider(
               values: _priceRange,
@@ -52,8 +50,6 @@ class _SearchScreenState extends State<SearchScreen> {
               onChanged: (values) => setState(() => _priceRange = values),
             ),
             const SizedBox(height: 10),
-
-            // Compra o Alquiler
             Row(
               children: [
                 Expanded(
@@ -74,8 +70,6 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
             ),
             const SizedBox(height: 25),
-
-            // Habitaciones y Baños
             Row(
               children: [
                 Expanded(
@@ -98,8 +92,6 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
             ),
             const SizedBox(height: 25),
-
-            // Tipo de Inmueble
             DropdownButtonFormField<PropertyType>(
               value: _selectedType,
               decoration: const InputDecoration(labelText: 'Tipo de inmueble'),
@@ -112,15 +104,24 @@ class _SearchScreenState extends State<SearchScreen> {
               }).toList(),
               onChanged: (val) => setState(() => _selectedType = val),
             ),
-
             const SizedBox(height: 40),
-            
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // TODO: Implementar consulta compleja a Firestore
-                  print('Buscando: $_city, ${_priceRange.start}-${_priceRange.end}, Rent: $_isForRent');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SearchResultsScreen(
+                        city: _city,
+                        priceRange: _priceRange,
+                        minBedrooms: _minBedrooms,
+                        minBathrooms: _minBathrooms,
+                        type: _selectedType,
+                        isForRent: _isForRent,
+                      ),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(15),
