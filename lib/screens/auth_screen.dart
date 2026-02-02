@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/property.dart';
 import '../services/firebase_service.dart';
 import '../widgets/property_card.dart';
-import 'add_property_screen.dart'; // Reutilizaremos esta pantalla para editar más adelante
+import 'add_property_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -88,7 +88,6 @@ class _AuthScreenState extends State<AuthScreen> {
             final user = snapshot.data!;
             return Column(
               children: [
-                // Cabecera del perfil
                 Container(
                   padding: const EdgeInsets.all(20),
                   color: Colors.blueAccent.withOpacity(0.1),
@@ -134,7 +133,6 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                 ),
                 const Divider(),
-                // Lista de anuncios del usuario
                 Expanded(
                   child: StreamBuilder<List<Property>>(
                     stream: _firebaseService.getPropertiesForUser(user.uid),
@@ -159,30 +157,28 @@ class _AuthScreenState extends State<AuthScreen> {
                             children: [
                               PropertyCard(
                                 property: property,
-                                onTap: () {
-                                  // Aquí podrías ir al detalle si quieres
-                                },
+                                onTap: () {},
                               ),
                               Positioned(
                                 top: 15,
                                 right: 15,
                                 child: Row(
                                   children: [
-                                    // Botón EDITAR
                                     CircleAvatar(
                                       backgroundColor: Colors.white,
                                       child: IconButton(
                                         icon: const Icon(Icons.edit, color: Colors.blue),
                                         onPressed: () {
-                                          // TODO: Implementar paso de datos a AddPropertyScreen para editar
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text('Función de editar próximamente')),
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => AddPropertyScreen(propertyToEdit: property),
+                                            ),
                                           );
                                         },
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-                                    // Botón ELIMINAR
                                     CircleAvatar(
                                       backgroundColor: Colors.white,
                                       child: IconButton(
@@ -204,7 +200,6 @@ class _AuthScreenState extends State<AuthScreen> {
             );
           }
           
-          // Formulario de login/registro (cuando no está logueado)
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(

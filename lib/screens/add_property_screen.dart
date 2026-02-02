@@ -5,7 +5,9 @@ import '../services/firebase_service.dart';
 import '../services/location_service.dart';
 
 class AddPropertyScreen extends StatefulWidget {
-  const AddPropertyScreen({super.key});
+  final Property? propertyToEdit;
+
+  const AddPropertyScreen({super.key, this.propertyToEdit});
 
   @override
   State<AddPropertyScreen> createState() => _AddPropertyScreenState();
@@ -16,10 +18,12 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   final LocationService _locationService = LocationService();
 
-  String _title = '';
-  String _description = '';
-  double _price = 0;
-  String _address = '';
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _areaController = TextEditingController();
+
   String? _selectedProvince;
   String? _selectedCity;
   int _bedrooms = 1;
@@ -32,6 +36,8 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   List<String> _municipios = [];
   bool _isLoadingLocations = true;
 
+  bool get _isEditing => widget.propertyToEdit != null;
+
   @override
   void initState() {
     super.initState();
@@ -40,10 +46,40 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
   Future<void> _loadLocations() async {
     await _locationService.init();
+    
+    if (_isEditing) {
+      final p = widget.propertyToEdit!;
+      _titleController.text = p.title;
+      _descriptionController.text = p.description;
+      _priceController.text = p.price.toString();
+      _addressController.text = p.address;
+      _areaController.text = p.area.toString();
+      _selectedProvince = p.province;
+      _selectedCity = p.city;
+      _bedrooms = p.bedrooms;
+      _bathrooms = p.bathrooms;
+      _type = p.type;
+      _isForRent = p.isForRent;
+      
+      if (_selectedProvince != null) {
+        _municipios = _locationService.getMunicipios(_selectedProvince!);
+      }
+    }
+
     setState(() {
       _provinces = _locationService.getProvinces();
       _isLoadingLocations = false;
     });
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _priceController.dispose();
+    _addressController.dispose();
+    _areaController.dispose();
+    super.dispose();
   }
 
   void _saveProperty() async {
@@ -56,36 +92,40 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     }
 
     if (_formKey.currentState!.validate() && _selectedProvince != null && _selectedCity != null) {
-      _formKey.currentState!.save();
       
-      final newProperty = Property(
-        id: '', 
-        userId: user.uid, // <-- AQUÍ ESTÁ LA MAGIA
-        title: _title,
-        description: _description,
-        price: _price,
-        address: _address,
+      final property = Property(
+        id: _isEditing ? widget.propertyToEdit!.id : '', 
+        userId: user.uid,
+        title: _titleController.text,
+        description: _descriptionController.text,
+        price: double.parse(_priceController.text),
+        address: _addressController.text,
         city: _selectedCity!,
         province: _selectedProvince!,
         bedrooms: _bedrooms,
         bathrooms: _bathrooms,
-        area: _area,
-        images: [], 
+        area: double.parse(_areaController.text),
+        images: _isEditing ? widget.propertyToEdit!.images : [], 
         type: _type,
         isForRent: _isForRent,
       );
 
       try {
-        await _firebaseService.addProperty(newProperty);
+        if (_isEditing) {
+          await _firebaseService.updateProperty(property);
+        } else {
+          await _firebaseService.addProperty(property);
+        }
+        
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Propiedad añadida con éxito')),
+            SnackBar(content: Text(_isEditing ? 'Anuncio actualizado' : 'Propiedad añadida con éxito')),
           );
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al añadir: $e')),
+          SnackBar(content: Text('Error al guardar: $e')),
         );
       }
     } else if (_selectedProvince == null || _selectedCity == null) {
@@ -98,7 +138,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Añadir Inmueble')),
+      appBar: AppBar(title: Text(_isEditing ? 'Editar Inmueble' : 'Añadir Inmueble')),
       body: _isLoadingLocations 
         ? const Center(child: CircularProgressIndicator())
         : SingleChildScrollView(
@@ -107,25 +147,24 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  // ... (el resto del formulario no cambia)
                   TextFormField(
+                    controller: _titleController,
                     decoration: const InputDecoration(labelText: 'Título'),
                     validator: (value) => value!.isEmpty ? 'Campo obligatorio' : null,
-                    onSaved: (value) => _title = value!,
                   ),
                   TextFormField(
+                    controller: _descriptionController,
                     decoration: const InputDecoration(labelText: 'Descripción'),
                     maxLines: 3,
-                    onSaved: (value) => _description = value!,
                   ),
                   Row(
                     children: [
                       Expanded(
                         child: TextFormField(
+                          controller: _priceController,
                           decoration: const InputDecoration(labelText: 'Precio (€)'),
                           keyboardType: TextInputType.number,
                           validator: (value) => value!.isEmpty ? 'Obligatorio' : null,
-                          onSaved: (value) => _price = double.parse(value!),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -162,8 +201,8 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                     },
                   ),
                   TextFormField(
+                    controller: _addressController,
                     decoration: const InputDecoration(labelText: 'Dirección (Calle, número...)'),
-                    onSaved: (value) => _address = value!,
                   ),
                   const SizedBox(height: 15),
                   Row(
@@ -193,9 +232,9 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   ),
                   const SizedBox(height: 15),
                   TextFormField(
+                    controller: _areaController,
                     decoration: const InputDecoration(labelText: 'Área (m²)'),
                     keyboardType: TextInputType.number,
-                    onSaved: (value) => _area = double.parse(value ?? '0'),
                   ),
                   const SizedBox(height: 15),
                   DropdownButtonFormField<PropertyType>(
@@ -219,7 +258,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                         backgroundColor: Colors.blueAccent,
                         foregroundColor: Colors.white,
                       ),
-                      child: const Text('Guardar Inmueble', style: TextStyle(fontSize: 18)),
+                      child: Text(_isEditing ? 'Guardar Cambios' : 'Publicar Inmueble', style: const TextStyle(fontSize: 18)),
                     ),
                   ),
                 ],
