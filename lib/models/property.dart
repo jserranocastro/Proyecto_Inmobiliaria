@@ -2,11 +2,13 @@ enum PropertyType { chalet, piso, casa, atico, duplex }
 
 class Property {
   final String id;
+  final String userId; // Añadido para saber quién publicó el anuncio
   final String title;
   final String description;
   final double price;
   final String address;
   final String city;
+  final String province;
   final int bedrooms;
   final int bathrooms;
   final double area; 
@@ -16,11 +18,13 @@ class Property {
 
   Property({
     required this.id,
+    required this.userId,
     required this.title,
     required this.description,
     required this.price,
     required this.address,
     required this.city,
+    required this.province,
     required this.bedrooms,
     required this.bathrooms,
     required this.area,
@@ -31,11 +35,13 @@ class Property {
 
   Map<String, dynamic> toMap() {
     return {
+      'userId': userId,
       'title': title,
       'description': description,
       'price': price,
       'address': address,
       'city': city,
+      'province': province,
       'bedrooms': bedrooms,
       'bathrooms': bathrooms,
       'area': area,
@@ -46,21 +52,21 @@ class Property {
   }
 
   factory Property.fromMap(String id, Map<String, dynamic> map) {
-    // Intentamos obtener el tipo de forma segura
     int typeIndex = 0;
     if (map['type'] != null) {
       int val = (map['type'] as num).toInt();
-      // Si el índice es válido para nuestro enum actual, lo usamos. Si no, ponemos 0 (chalet)
       typeIndex = (val >= 0 && val < PropertyType.values.length) ? val : 0;
     }
 
     return Property(
       id: id,
+      userId: map['userId']?.toString() ?? '',
       title: map['title']?.toString() ?? 'Sin título',
       description: map['description']?.toString() ?? '',
       price: (map['price'] ?? 0).toDouble(),
       address: map['address']?.toString() ?? '',
       city: map['city']?.toString() ?? '',
+      province: map['province']?.toString() ?? '',
       bedrooms: (map['bedrooms'] ?? 0).toInt(),
       bathrooms: (map['bathrooms'] ?? 0).toInt(),
       area: (map['area'] ?? 0).toDouble(),

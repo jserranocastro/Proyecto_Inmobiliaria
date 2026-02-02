@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/property.dart';
+import '../services/firebase_service.dart';
+import '../widgets/property_card.dart';
+import 'add_property_screen.dart'; // Reutilizaremos esta pantalla para editar más adelante
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -12,6 +16,7 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
+  final _firebaseService = FirebaseService();
   
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -38,7 +43,6 @@ class _AuthScreenState extends State<AuthScreen> {
       if (_isLogin) {
         await _auth.signInWithEmailAndPassword(email: email, password: password);
       } else {
-        // 1. Verificar si el nombre de usuario ya existe
         final usernameQuery = await _firestore
             .collection('users')
             .where('username', isEqualTo: username)
@@ -51,29 +55,22 @@ class _AuthScreenState extends State<AuthScreen> {
           );
         }
 
-        // 2. Crear usuario en Auth
         final userCredential = await _auth.createUserWithEmailAndPassword(
           email: email,
           password: password,
         );
 
-        // 3. Guardar datos adicionales en Firestore
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'username': username,
           'email': email,
           'createdAt': Timestamp.now(),
         });
 
-        // 4. Actualizar el displayName para uso rápido
         await userCredential.user!.updateDisplayName(username);
       }
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message ?? 'Error de autenticación')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error inesperado: $e')),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -83,35 +80,131 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_isLogin ? 'Iniciar Sesión' : 'Crear Cuenta')),
+      appBar: AppBar(title: Text(_isLogin ? 'Mi Cuenta' : 'Crear Cuenta')),
       body: StreamBuilder<User?>(
         stream: _auth.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.account_circle, size: 80, color: Colors.blueAccent),
-                  const SizedBox(height: 10),
-                  // Usamos displayName que hemos guardado al registrar
-                  Text(
-                    'Bienvenido, ${snapshot.data!.displayName ?? 'Usuario'}',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            final user = snapshot.data!;
+            return Column(
+              children: [
+                // Cabecera del perfil
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  color: Colors.blueAccent.withOpacity(0.1),
+                  child: Row(
+                    children: [
+                      const CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Colors.blueAccent,
+                        child: Icon(Icons.person, color: Colors.white, size: 35),
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user.displayName ?? 'Usuario',
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            Text(user.email ?? '', style: const TextStyle(color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.logout, color: Colors.red),
+                        onPressed: () => _auth.signOut(),
+                        tooltip: 'Cerrar Sesión',
+                      )
+                    ],
                   ),
-                  Text('${snapshot.data!.email}', style: const TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 30),
-                  ElevatedButton.icon(
-                    onPressed: () => _auth.signOut(),
-                    icon: const Icon(Icons.logout),
-                    label: const Text('Cerrar Sesión'),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red[50]),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  child: Row(
+                    children: [
+                      Icon(Icons.home_work_outlined, color: Colors.blueAccent),
+                      SizedBox(width: 10),
+                      Text(
+                        'Mis Anuncios Publicados',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const Divider(),
+                // Lista de anuncios del usuario
+                Expanded(
+                  child: StreamBuilder<List<Property>>(
+                    stream: _firebaseService.getPropertiesForUser(user.uid),
+                    builder: (context, propertySnapshot) {
+                      if (propertySnapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      
+                      final properties = propertySnapshot.data ?? [];
+                      
+                      if (properties.isEmpty) {
+                        return const Center(
+                          child: Text('Aún no has publicado ningún anuncio.'),
+                        );
+                      }
+
+                      return ListView.builder(
+                        itemCount: properties.length,
+                        itemBuilder: (context, index) {
+                          final property = properties[index];
+                          return Stack(
+                            children: [
+                              PropertyCard(
+                                property: property,
+                                onTap: () {
+                                  // Aquí podrías ir al detalle si quieres
+                                },
+                              ),
+                              Positioned(
+                                top: 15,
+                                right: 15,
+                                child: Row(
+                                  children: [
+                                    // Botón EDITAR
+                                    CircleAvatar(
+                                      backgroundColor: Colors.white,
+                                      child: IconButton(
+                                        icon: const Icon(Icons.edit, color: Colors.blue),
+                                        onPressed: () {
+                                          // TODO: Implementar paso de datos a AddPropertyScreen para editar
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Función de editar próximamente')),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    // Botón ELIMINAR
+                                    CircleAvatar(
+                                      backgroundColor: Colors.white,
+                                      child: IconButton(
+                                        icon: const Icon(Icons.delete, color: Colors.red),
+                                        onPressed: () => _confirmDelete(context, property.id),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
             );
           }
           
+          // Formulario de login/registro (cuando no está logueado)
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -119,28 +212,17 @@ class _AuthScreenState extends State<AuthScreen> {
                 if (!_isLogin) ...[
                   TextField(
                     controller: _usernameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nombre de usuario',
-                      prefixIcon: Icon(Icons.person_outline),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Nombre de usuario'),
                   ),
                   const SizedBox(height: 10),
                 ],
                 TextField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Email'),
                 ),
-                const SizedBox(height: 10),
                 TextField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Contraseña',
-                    prefixIcon: Icon(Icons.lock_outline),
-                  ),
+                  decoration: const InputDecoration(labelText: 'Contraseña'),
                   obscureText: true,
                 ),
                 const SizedBox(height: 30),
@@ -151,14 +233,11 @@ class _AuthScreenState extends State<AuthScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _submit,
-                      style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(15)),
                       child: Text(_isLogin ? 'Entrar' : 'Registrarse'),
                     ),
                   ),
                 TextButton(
-                  onPressed: () => setState(() {
-                    _isLogin = !_isLogin;
-                  }),
+                  onPressed: () => setState(() => _isLogin = !_isLogin),
                   child: Text(_isLogin
                       ? '¿No tienes cuenta? Regístrate aquí'
                       : '¿Ya tienes cuenta? Inicia sesión'),
@@ -167,6 +246,29 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, String propertyId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Eliminar anuncio?'),
+        content: const Text('Esta acción no se puede deshacer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await _firebaseService.deleteProperty(propertyId);
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

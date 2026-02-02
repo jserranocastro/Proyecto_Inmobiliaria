@@ -16,6 +16,18 @@ class FirebaseService {
     });
   }
 
+  // Obtener solo las propiedades de un usuario
+  Stream<List<Property>> getPropertiesForUser(String userId) {
+    return _propertiesRef
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return Property.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+      }).toList();
+    });
+  }
+
   // BÚSQUEDA CON FILTROS
   Stream<List<Property>> searchProperties({
     required String city,
@@ -31,7 +43,6 @@ class FirebaseService {
 
     Query query = _propertiesRef;
 
-    // Filtro Alquiler/Compra (Siempre activo)
     query = query.where('isForRent', isEqualTo: isForRent);
     
     if (city.isNotEmpty) {
@@ -42,21 +53,16 @@ class FirebaseService {
       query = query.where('type', isEqualTo: type.index);
     }
 
-    // Rango de precio
     query = query.where('price', isGreaterThanOrEqualTo: minPrice)
                  .where('price', isLessThanOrEqualTo: maxPrice);
 
     return query.snapshots().map((snapshot) {
-      print("FIREBASE: Búsqueda completada. Encontrados ${snapshot.docs.length} docs en Firestore");
-      
       final results = snapshot.docs.map((doc) {
         return Property.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).where((p) {
-        // Filtro manual para habitaciones y baños
         return p.bedrooms >= minBedrooms && p.bathrooms >= minBathrooms;
       }).toList();
       
-      print("FIREBASE: Tras filtros de habitaciones/baños quedan ${results.length} resultados");
       return results;
     });
   }
@@ -64,10 +70,16 @@ class FirebaseService {
   Future<void> addProperty(Property property) async {
     try {
       await _propertiesRef.add(property.toMap());
-      print("FIREBASE: Propiedad guardada con éxito");
     } catch (e) {
-      print("FIREBASE ERROR al guardar: $e");
       rethrow;
     }
+  }
+
+  Future<void> updateProperty(Property property) {
+    return _propertiesRef.doc(property.id).update(property.toMap());
+  }
+
+  Future<void> deleteProperty(String propertyId) {
+    return _propertiesRef.doc(propertyId).delete();
   }
 }
