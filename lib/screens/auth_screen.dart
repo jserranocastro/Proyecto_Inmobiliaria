@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/property.dart';
 import '../services/firebase_service.dart';
+import '../services/location_service.dart';
+import '../services/preferences_service.dart';
 import '../widgets/property_card.dart';
 import 'add_property_screen.dart';
 
@@ -17,6 +19,8 @@ class _AuthScreenState extends State<AuthScreen> {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
   final _firebaseService = FirebaseService();
+  final _locationService = LocationService();
+  final _prefsService = PreferencesService();
   
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -24,6 +28,23 @@ class _AuthScreenState extends State<AuthScreen> {
   
   bool _isLogin = true;
   bool _isLoading = false;
+
+  String? _defaultProvince;
+  String? _defaultCity;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDefaultLocation();
+  }
+
+  Future<void> _loadDefaultLocation() async {
+    final loc = await _prefsService.getDefaultLocation();
+    setState(() {
+      _defaultProvince = loc['province'];
+      _defaultCity = loc['city'];
+    });
+  }
 
   Future<void> _submit() async {
     final email = _emailController.text.trim();
@@ -77,10 +98,70 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  void _showLocationDialog() async {
+    await _locationService.init();
+    String? selectedProv = _defaultProvince;
+    String? selectedCity = _defaultCity;
+    List<String> provinces = _locationService.getProvinces();
+    List<String> cities = selectedProv != null ? _locationService.getMunicipios(selectedProv) : [];
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Definir ubicación por defecto'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: selectedProv,
+                decoration: const InputDecoration(labelText: 'Provincia'),
+                items: provinces.map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 14)))).toList(),
+                onChanged: (val) {
+                  setDialogState(() {
+                    selectedProv = val;
+                    selectedCity = null;
+                    cities = _locationService.getMunicipios(val!);
+                  });
+                },
+              ),
+              const SizedBox(height: 15),
+              DropdownButtonFormField<String>(
+                value: selectedCity,
+                decoration: const InputDecoration(labelText: 'Municipio'),
+                items: cities.map((m) => DropdownMenuItem(value: m, child: Text(m, style: const TextStyle(fontSize: 14)))).toList(),
+                onChanged: selectedProv == null ? null : (val) => setDialogState(() => selectedCity = val),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+            ElevatedButton(
+              onPressed: selectedProv != null && selectedCity != null
+                  ? () async {
+                      await _prefsService.setDefaultLocation(selectedProv!, selectedCity!);
+                      _loadDefaultLocation();
+                      if (context.mounted) Navigator.pop(context);
+                    }
+                  : null,
+              child: const Text('Guardar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_isLogin ? 'Mi Cuenta' : 'Crear Cuenta')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text(_isLogin ? 'Mi Cuenta' : 'Crear Cuenta'),
+        surfaceTintColor: Colors.transparent,
+      ),
       body: StreamBuilder<User?>(
         stream: _auth.authStateChanges(),
         builder: (context, snapshot) {
@@ -89,50 +170,88 @@ class _AuthScreenState extends State<AuthScreen> {
             return Column(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(20),
-                  color: Colors.blueAccent.withOpacity(0.1),
-                  child: Row(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(32),
+                      bottomRight: Radius.circular(32),
+                    ),
+                  ),
+                  child: Column(
                     children: [
-                      const CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.blueAccent,
-                        child: Icon(Icons.person, color: Colors.white, size: 35),
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              user.displayName ?? 'Usuario',
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2),
                             ),
-                            Text(user.email ?? '', style: const TextStyle(color: Colors.grey)),
+                            child: const CircleAvatar(
+                              radius: 35,
+                              backgroundColor: Colors.white,
+                              child: Icon(Icons.person, color: Color(0xFF0052D4), size: 40),
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  user.displayName ?? 'Usuario',
+                                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                                ),
+                                Text(user.email ?? '', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+                            onPressed: () => _auth.signOut(),
+                          )
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
                           ],
                         ),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.location_on, color: Color(0xFF0052D4)),
+                          title: const Text('Definir ubicación', style: TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: Text(_defaultCity != null ? '$_defaultCity, $_defaultProvince' : 'No definida'),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: _showLocationDialog,
+                        ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.logout, color: Colors.red),
-                        onPressed: () => _auth.signOut(),
-                        tooltip: 'Cerrar Sesión',
-                      )
                     ],
                   ),
                 ),
                 const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: EdgeInsets.fromLTRB(24, 24, 24, 8),
                   child: Row(
                     children: [
-                      Icon(Icons.home_work_outlined, color: Colors.blueAccent),
-                      SizedBox(width: 10),
+                      Icon(Icons.home_work_rounded, color: Color(0xFF0052D4), size: 20),
+                      SizedBox(width: 8),
                       Text(
-                        'Mis Anuncios Publicados',
+                        'Mis Anuncios',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                 ),
-                const Divider(),
                 Expanded(
                   child: StreamBuilder<List<Property>>(
                     stream: _firebaseService.getPropertiesForUser(user.uid),
@@ -144,12 +263,20 @@ class _AuthScreenState extends State<AuthScreen> {
                       final properties = propertySnapshot.data ?? [];
                       
                       if (properties.isEmpty) {
-                        return const Center(
-                          child: Text('Aún no has publicado ningún anuncio.'),
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.post_add, size: 64, color: Colors.grey[300]),
+                              const SizedBox(height: 16),
+                              Text('No has publicado anuncios aún', style: TextStyle(color: Colors.grey[500])),
+                            ],
+                          ),
                         );
                       }
 
                       return ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: properties.length,
                         itemBuilder: (context, index) {
                           final property = properties[index];
@@ -160,31 +287,27 @@ class _AuthScreenState extends State<AuthScreen> {
                                 onTap: () {},
                               ),
                               Positioned(
-                                top: 15,
-                                right: 15,
+                                top: 12,
+                                right: 12,
                                 child: Row(
                                   children: [
-                                    CircleAvatar(
-                                      backgroundColor: Colors.white,
-                                      child: IconButton(
-                                        icon: const Icon(Icons.edit, color: Colors.blue),
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => AddPropertyScreen(propertyToEdit: property),
-                                            ),
-                                          );
-                                        },
-                                      ),
+                                    _buildActionButton(
+                                      icon: Icons.edit,
+                                      color: Colors.blue,
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => AddPropertyScreen(propertyToEdit: property),
+                                          ),
+                                        );
+                                      },
                                     ),
                                     const SizedBox(width: 8),
-                                    CircleAvatar(
-                                      backgroundColor: Colors.white,
-                                      child: IconButton(
-                                        icon: const Icon(Icons.delete, color: Colors.red),
-                                        onPressed: () => _confirmDelete(context, property.id),
-                                      ),
+                                    _buildActionButton(
+                                      icon: Icons.delete,
+                                      color: Colors.red,
+                                      onPressed: () => _confirmDelete(context, property.id),
                                     ),
                                   ],
                                 ),
@@ -201,36 +324,65 @@ class _AuthScreenState extends State<AuthScreen> {
           }
           
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(32.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SizedBox(height: 40),
+                Icon(Icons.home_rounded, size: 80, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(height: 24),
+                Text(
+                  _isLogin ? '¡Bienvenido de nuevo!' : 'Crea tu cuenta',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _isLogin ? 'Inicia sesión para gestionar tus inmuebles' : 'Únete a nuestra comunidad inmobiliaria',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 40),
                 if (!_isLogin) ...[
                   TextField(
                     controller: _usernameController,
-                    decoration: const InputDecoration(labelText: 'Nombre de usuario'),
+                    decoration: const InputDecoration(
+                      labelText: 'Nombre de usuario',
+                      prefixIcon: Icon(Icons.person_outline),
+                    ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 16),
                 ],
                 TextField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
                 ),
+                const SizedBox(height: 16),
                 TextField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'Contraseña'),
+                  decoration: const InputDecoration(
+                    labelText: 'Contraseña',
+                    prefixIcon: Icon(Icons.lock_outline),
+                  ),
                   obscureText: true,
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 32),
                 if (_isLoading)
-                  const CircularProgressIndicator()
+                  const Center(child: CircularProgressIndicator())
                 else
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _submit,
-                      child: Text(_isLogin ? 'Entrar' : 'Registrarse'),
+                  ElevatedButton(
+                    onPressed: _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Colors.white,
                     ),
+                    child: Text(_isLogin ? 'Entrar' : 'Registrarse'),
                   ),
+                const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => setState(() => _isLogin = !_isLogin),
                   child: Text(_isLogin
@@ -245,23 +397,42 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  Widget _buildActionButton({required IconData icon, required Color color, required VoidCallback onPressed}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: IconButton(
+        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+        padding: EdgeInsets.zero,
+        icon: Icon(icon, color: color, size: 20),
+        onPressed: onPressed,
+      ),
+    );
+  }
+
   void _confirmDelete(BuildContext context, String propertyId) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('¿Eliminar anuncio?'),
-        content: const Text('Esta acción no se puede deshacer.'),
+        content: const Text('Esta acción no se puede deshacer y el anuncio desaparecerá de la plataforma.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancelar'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () async {
               await _firebaseService.deleteProperty(propertyId);
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+            child: const Text('Eliminar'),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:device_preview/device_preview.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'screens/main_screen.dart';
 import 'firebase_options.dart'; 
 
@@ -28,19 +29,53 @@ class RealEstateApp extends StatelessWidget {
     return MaterialApp(
       title: 'Inmobiliaria TFG',
       debugShowCheckedModeBanner: false,
-      useInheritedMediaQuery: true, // Importante para DevicePreview
-      locale: DevicePreview.locale(context), // Importante para DevicePreview
-      builder: DevicePreview.appBuilder, // Importante para DevicePreview
+      useInheritedMediaQuery: true,
+      locale: DevicePreview.locale(context),
+      builder: DevicePreview.appBuilder,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blueAccent,
-          primary: Colors.blueAccent,
-        ),
         useMaterial3: true,
-        appBarTheme: const AppBarTheme(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF0052D4),
+          primary: const Color(0xFF0052D4),
+          secondary: const Color(0xFF4361EE),
+          surface: Colors.white,
+        ),
+        textTheme: GoogleFonts.poppinsTextTheme(),
+        appBarTheme: AppBarTheme(
           centerTitle: true,
-          backgroundColor: Colors.blueAccent,
-          foregroundColor: Colors.white,
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF0052D4),
+          elevation: 0,
+          titleTextStyle: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF0052D4),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey[100],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF0052D4), width: 1),
+          ),
         ),
       ),
       home: const MainScreen(),
