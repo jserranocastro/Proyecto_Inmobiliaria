@@ -83,7 +83,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       labelText: 'Municipio *',
                       prefixIcon: Icon(Icons.location_city),
                     ),
-                    disabledHint: const Text('Selecciona una provincia primero'),
+                    disabledHint: const Text('Seleccionar provincia antes'),
                     items: _municipios.map((m) => DropdownMenuItem(value: m, child: Text(m, style: const TextStyle(fontSize: 14)))).toList(),
                     onChanged: _selectedProvince == null ? null : (val) {
                       setState(() => _selectedCity = val);

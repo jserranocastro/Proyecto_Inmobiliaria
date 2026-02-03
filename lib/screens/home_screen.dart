@@ -167,12 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Inmuebles'),
-        actions: [
-          IconButton(
-            onPressed: _showChangeLocationSheet,
-            icon: const Icon(Icons.tune_rounded),
-          )
-        ],
+        // Botón de filtro eliminado como solicitaste
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

@@ -99,7 +99,7 @@ class SearchResultsScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Prueba a ampliar el rango de precio\no a cambiar la ubicación.',
+                          'Prueba con otros filtros',
                           textAlign: TextAlign.center,
                           style: TextStyle(color: Colors.grey[600]),
                         ),
