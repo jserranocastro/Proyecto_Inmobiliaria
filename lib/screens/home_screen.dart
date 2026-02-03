@@ -30,6 +30,27 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _initializeData();
+    // Escuchar cambios en la ubicación global (ej: desde AuthScreen)
+    PreferencesService.locationNotifier.addListener(_onLocationPreferenceChanged);
+  }
+
+  @override
+  void dispose() {
+    PreferencesService.locationNotifier.removeListener(_onLocationPreferenceChanged);
+    super.dispose();
+  }
+
+  void _onLocationPreferenceChanged() {
+    final newLoc = PreferencesService.locationNotifier.value;
+    if (mounted) {
+      setState(() {
+        _selectedProvince = newLoc['province'];
+        _selectedCity = newLoc['city'];
+        if (_selectedProvince != null) {
+          _municipios = _locationService.getMunicipios(_selectedProvince!);
+        }
+      });
+    }
   }
 
   Future<void> _initializeData() async {
@@ -38,15 +59,17 @@ class _HomeScreenState extends State<HomeScreen> {
     
     final savedLoc = await _prefsService.getDefaultLocation();
     
-    setState(() {
-      _provinces = provinces;
-      _selectedProvince = savedLoc['province'];
-      _selectedCity = savedLoc['city'];
-      if (_selectedProvince != null) {
-        _municipios = _locationService.getMunicipios(_selectedProvince!);
-      }
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _provinces = provinces;
+        _selectedProvince = savedLoc['province'];
+        _selectedCity = savedLoc['city'];
+        if (_selectedProvince != null) {
+          _municipios = _locationService.getMunicipios(_selectedProvince!);
+        }
+        _isLoading = false;
+      });
+    }
   }
 
   void _onAddProperty() {
