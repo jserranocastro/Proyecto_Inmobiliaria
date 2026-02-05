@@ -40,13 +40,13 @@ class RealEstateApp extends StatelessWidget {
           secondary: const Color(0xFF4361EE),
           surface: Colors.white,
         ),
-        textTheme: GoogleFonts.poppinsTextTheme(),
+        textTheme: GoogleFonts.montserratTextTheme(),
         appBarTheme: AppBarTheme(
           centerTitle: true,
           backgroundColor: Colors.white,
           foregroundColor: const Color(0xFF0052D4),
           elevation: 0,
-          titleTextStyle: GoogleFonts.poppins(
+          titleTextStyle: GoogleFonts.montserrat(
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: const Color(0xFF0052D4),
