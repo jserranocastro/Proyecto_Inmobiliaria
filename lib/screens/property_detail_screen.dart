@@ -40,10 +40,12 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       },
                       itemCount: property.images.length,
                       itemBuilder: (context, index) {
-                        return Image.memory(
-                          base64Decode(property.images[index]),
-                          fit: BoxFit.cover,
-                          width: double.infinity,
+                        return InteractiveViewer(
+                          child: Image.memory(
+                            base64Decode(property.images[index]),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                          ),
                         );
                       },
                     )

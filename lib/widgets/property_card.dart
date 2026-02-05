@@ -2,11 +2,18 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/property.dart';
 
-class PropertyCard extends StatelessWidget {
+class PropertyCard extends StatefulWidget {
   final Property property;
   final VoidCallback onTap;
 
   const PropertyCard({super.key, required this.property, required this.onTap});
+
+  @override
+  State<PropertyCard> createState() => _PropertyCardState();
+}
+
+class _PropertyCardState extends State<PropertyCard> {
+  int _currentImageIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -28,28 +35,38 @@ class PropertyCard extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: onTap,
+            onTap: widget.onTap,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Contenedor de la imagen
                 Stack(
                   children: [
-                    Container(
+                    SizedBox(
                       height: 220,
                       width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                      ),
-                      child: property.images.isNotEmpty
-                          ? Image.memory(
-                              base64Decode(property.images[0]),
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey));
+                      child: widget.property.images.isNotEmpty
+                          ? PageView.builder(
+                              itemCount: widget.property.images.length,
+                              onPageChanged: (index) {
+                                setState(() {
+                                  _currentImageIndex = index;
+                                });
+                              },
+                              itemBuilder: (context, index) {
+                                return Image.memory(
+                                  base64Decode(widget.property.images[index]),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey));
+                                  },
+                                );
                               },
                             )
-                          : const Center(child: Icon(Icons.home_work_outlined, size: 50, color: Colors.grey)),
+                          : Container(
+                              color: Colors.grey[100],
+                              child: const Center(child: Icon(Icons.home_work_outlined, size: 50, color: Colors.grey)),
+                            ),
                     ),
                     Positioned(
                       top: 16,
@@ -61,7 +78,7 @@ class PropertyCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          property.type.name.toUpperCase(),
+                          widget.property.type.name.toUpperCase(),
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -71,6 +88,27 @@ class PropertyCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (widget.property.images.length > 1)
+                      Positioned(
+                        bottom: 10,
+                        left: 0,
+                        right: 0,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(widget.property.images.length, (index) {
+                            return AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              width: _currentImageIndex == index ? 12 : 8,
+                              height: 8,
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(4),
+                                color: _currentImageIndex == index ? Colors.white : Colors.white.withOpacity(0.7),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
                   ],
                 ),
                 Padding(
@@ -82,7 +120,7 @@ class PropertyCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            '${property.price.toStringAsFixed(0)} €${property.isForRent ? "/mes" : ""}',
+                            '${widget.property.price.toStringAsFixed(0)} €${widget.property.isForRent ? "/mes" : ""}',
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
@@ -93,7 +131,7 @@ class PropertyCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        property.title,
+                        widget.property.title,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -108,7 +146,7 @@ class PropertyCard extends StatelessWidget {
                           const Icon(Icons.location_on_outlined, size: 14, color: Colors.grey),
                           const SizedBox(width: 4),
                           Text(
-                            '${property.city}, ${property.province}',
+                            '${widget.property.city}, ${widget.property.province}',
                             style: TextStyle(color: Colors.grey[600], fontSize: 13),
                           ),
                         ],
@@ -119,9 +157,9 @@ class PropertyCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildInfoItem(Icons.king_bed_outlined, '${property.bedrooms} hab.'),
-                          _buildInfoItem(Icons.bathtub_outlined, '${property.bathrooms} baños'),
-                          _buildInfoItem(Icons.square_foot, '${property.area.toStringAsFixed(0)} m²'),
+                          _buildInfoItem(Icons.king_bed_outlined, '${widget.property.bedrooms} hab.'),
+                          _buildInfoItem(Icons.bathtub_outlined, '${widget.property.bathrooms} baños'),
+                          _buildInfoItem(Icons.square_foot, '${widget.property.area.toStringAsFixed(0)} m²'),
                         ],
                       ),
                     ],
