@@ -166,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Inmuebles'),
+        title: const Text('Inmuebles en tu zona'),
         // Botón de filtro eliminado como solicitaste
       ),
       body: _isLoading

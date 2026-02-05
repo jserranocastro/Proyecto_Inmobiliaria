@@ -149,7 +149,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<PropertyType>(
                     value: _selectedType,
-                    decoration: const InputDecoration(labelText: 'Tipo de inmueble'),
+                    decoration: const InputDecoration(labelText: 'Tipo'),
                     hint: const Text('Todos los tipos'),
                     items: PropertyType.values.map((type) {
                       return DropdownMenuItem(

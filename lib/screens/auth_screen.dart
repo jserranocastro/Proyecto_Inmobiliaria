@@ -269,7 +269,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             children: [
                               Icon(Icons.post_add, size: 64, color: Colors.grey[300]),
                               const SizedBox(height: 16),
-                              Text('No has publicado anuncios aún', style: TextStyle(color: Colors.grey[500])),
+                              Text('No has publicado anuncios', style: TextStyle(color: Colors.grey[500])),
                             ],
                           ),
                         );
@@ -338,7 +338,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _isLogin ? 'Inicia sesión para gestionar tus inmuebles' : 'Únete a nuestra comunidad inmobiliaria',
+                  _isLogin ? 'Inicia sesión para gestionar tus inmuebles' : 'Únete a nuestra comunidad',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.grey[600]),
                 ),
@@ -420,7 +420,7 @@ class _AuthScreenState extends State<AuthScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('¿Eliminar anuncio?'),
-        content: const Text('Esta acción no se puede deshacer y el anuncio desaparecerá de la plataforma.'),
+        content: const Text('Esta acción no se puede deshacer.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
