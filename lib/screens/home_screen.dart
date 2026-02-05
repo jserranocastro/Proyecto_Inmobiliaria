@@ -30,7 +30,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _initializeData();
-    // Escuchar cambios en la ubicación global (ej: desde AuthScreen)
     PreferencesService.locationNotifier.addListener(_onLocationPreferenceChanged);
   }
 
@@ -93,28 +92,30 @@ class _HomeScreenState extends State<HomeScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            top: 20,
-            left: 20,
-            right: 20,
-          ),
-          child: Column(
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          top: 12,
+          left: 24,
+          right: 24,
+        ),
+        child: StatefulBuilder(
+          builder: (context, setSheetState) => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(2)),
               ),
-              const SizedBox(height: 20),
-              const Text('Cambiar Ubicación', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
+              const Text('Cambiar Ubicación', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 24),
               DropdownButtonFormField<String>(
                 value: _selectedProvince,
                 decoration: const InputDecoration(labelText: 'Provincia'),
@@ -127,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 },
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _selectedCity,
                 decoration: const InputDecoration(labelText: 'Municipio'),
@@ -136,24 +137,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   setSheetState(() => _selectedCity = val);
                 },
               ),
-              const SizedBox(height: 25),
+              const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _selectedProvince != null && _selectedCity != null
                       ? () {
-                          setState(() {}); // Refrescar pantalla principal
+                          setState(() {}); 
                           Navigator.pop(context);
                         }
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: const Color(0xFF0052D4),
                     foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    elevation: 4,
+                    shadowColor: const Color(0xFF0052D4).withOpacity(0.4),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
-                  child: const Text('Aplicar Filtro'),
+                  child: const Text('APLICAR FILTRO', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -164,10 +169,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8F9FD),
       appBar: AppBar(
         title: const Text('Inmuebles en tu zona'),
-        // Botón de filtro eliminado como solicitaste
+        surfaceTintColor: Colors.transparent,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -176,19 +181,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 GestureDetector(
                   onTap: _showChangeLocationSheet,
                   child: Container(
-                    margin: const EdgeInsets.all(16),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(20),
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                        BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5)),
                       ],
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.location_on, color: Color(0xFF0052D4), size: 20),
-                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0052D4).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.location_on, color: Color(0xFF0052D4), size: 20),
+                        ),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,14 +210,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                               ),
                               if (_selectedProvince != null)
-                                Text(_selectedProvince!, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                Text(_selectedProvince!, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
                             ],
                           ),
                         ),
-                        Text(
-                          'Cambiar',
-                          style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600, fontSize: 13),
-                        ),
+                        const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
                       ],
                     ),
                   ),
@@ -213,19 +222,42 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: (_selectedProvince == null || _selectedCity == null)
                       ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.location_city_rounded, size: 80, color: Colors.grey[300]),
-                              const SizedBox(height: 16),
-                              Text('Elige una ubicación para ver anuncios', style: TextStyle(color: Colors.grey[500], fontSize: 16)),
-                              const SizedBox(height: 20),
-                              ElevatedButton.icon(
-                                onPressed: _showChangeLocationSheet,
-                                icon: const Icon(Icons.search),
-                                label: const Text('Seleccionar ahora'),
-                              )
-                            ],
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 40),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.location_city_rounded, size: 100, color: const Color(0xFF0052D4).withOpacity(0.1)),
+                                const SizedBox(height: 24),
+                                const Text(
+                                  'Encuentra tu próximo hogar',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Elige una ubicación para ver los mejores inmuebles disponibles en tu zona.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Colors.grey[600], height: 1.5),
+                                ),
+                                const SizedBox(height: 32),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: _showChangeLocationSheet,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF0052D4),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 18),
+                                      elevation: 8,
+                                      shadowColor: const Color(0xFF0052D4).withOpacity(0.5),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    ),
+                                    child: const Text('BUSCAR AHORA', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
                         )
                       : StreamBuilder<List<Property>>(
@@ -253,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             }
 
                             return ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               itemCount: properties.length,
                               itemBuilder: (context, index) {
                                 return PropertyCard(
@@ -278,8 +310,10 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: _onAddProperty,
         backgroundColor: const Color(0xFF0052D4),
         foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('Publicar'),
+        elevation: 12,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        icon: const Icon(Icons.add, size: 24),
+        label: const Text('Publicar', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5)),
       ),
     );
   }
