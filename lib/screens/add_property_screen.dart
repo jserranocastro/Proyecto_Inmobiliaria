@@ -78,9 +78,9 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   }
 
   Future<void> _pickImage() async {
-    if (_base64Images.length >= 5) {
+    if (_base64Images.length >= 7) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Máximo 5 fotos por anuncio')),
+        const SnackBar(content: Text('Máximo 7 fotos por anuncio')),
       );
       return;
     }
@@ -187,7 +187,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Fotos del inmueble (Máx. 5)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text('Fotos del inmueble (Máx. 7)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 12),
                   SizedBox(
                     height: 100,
@@ -302,7 +302,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                         child: TextFormField(
                           controller: _priceController,
                           decoration: InputDecoration(
-                            labelText: _isForRent ? 'Precio al mes (€)' : 'Precio de venta (€)',
+                            labelText: _isForRent ? 'Precio/mes' : 'Precio/venta',
                             prefixIcon: const Icon(Icons.euro),
                           ),
                           keyboardType: TextInputType.number,
