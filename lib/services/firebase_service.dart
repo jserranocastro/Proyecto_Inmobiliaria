@@ -119,7 +119,7 @@ class FirebaseService {
     });
   }
 
-  // --- Mensajería Mejorada ---
+  // --- Mensajería Mejorada con Notificaciones ---
 
   Future<String> getOrCreateChatRoom(String user1, String user2, String propertyTitle, String sellerId) async {
     List<String> ids = [user1, user2];
@@ -134,6 +134,7 @@ class FirebaseService {
         'lastMessageTime': FieldValue.serverTimestamp(),
         'propertyTitle': propertyTitle,
         'sellerId': sellerId,
+        'readStatus': {user1: true, user2: true}, // Inicialmente leído por ambos
       });
     }
     return chatRoomId;
@@ -142,9 +143,17 @@ class FirebaseService {
   Future<void> sendMessage(String chatRoomId, ChatMessage message) async {
     await _chatRoomsRef.doc(chatRoomId).collection('messages').add(message.toMap());
     
+    // Al enviar, el receptor tiene el mensaje como "no leído"
     await _chatRoomsRef.doc(chatRoomId).update({
       'lastMessage': message.text,
       'lastMessageTime': FieldValue.serverTimestamp(),
+      'readStatus.${message.receiverId}': false,
+    });
+  }
+
+  Future<void> markAsRead(String chatRoomId, String userId) async {
+    await _chatRoomsRef.doc(chatRoomId).update({
+      'readStatus.$userId': true,
     });
   }
 
@@ -166,6 +175,12 @@ class FirebaseService {
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) => ChatRoom.fromFirestore(doc)).toList();
+    });
+  }
+
+  Stream<int> getUnreadCount(String userId) {
+    return getUserChatRooms(userId).map((rooms) {
+      return rooms.where((room) => room.readStatus[userId] == false).length;
     });
   }
 

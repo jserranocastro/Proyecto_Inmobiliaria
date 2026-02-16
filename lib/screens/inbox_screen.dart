@@ -1,11 +1,23 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../models/chat_room.dart';
 import '../services/firebase_service.dart';
 import 'chat_screen.dart';
 
 class InboxScreen extends StatelessWidget {
   const InboxScreen({super.key});
+
+  String _formatDateTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inMinutes < 1) return 'ahora';
+    if (difference.inMinutes < 60) return 'hace ${difference.inMinutes} min';
+    if (difference.inHours < 24) return 'hace ${difference.inHours} h';
+    if (difference.inDays < 7) return DateFormat('EEEE', 'es').format(dateTime);
+    return DateFormat('dd/MM/yyyy').format(dateTime);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,23 +30,8 @@ class InboxScreen extends StatelessWidget {
 
         if (user == null) {
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('Mensajes'),
-              surfaceTintColor: Colors.transparent,
-            ),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.lock_outline, size: 80, color: Colors.grey[300]),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Inicia sesión para ver tus mensajes',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
+            appBar: AppBar(title: const Text('Mensajes')),
+            body: const Center(child: Text('Inicia sesión para ver tus mensajes')),
           );
         }
 
@@ -53,25 +50,14 @@ class InboxScreen extends StatelessWidget {
               final rooms = snapshot.data ?? [];
 
               if (rooms.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.chat_bubble_outline, size: 80, color: Colors.grey[300]),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'No tienes conversaciones aún',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                );
+                return const Center(child: Text('No tienes conversaciones aún'));
               }
 
               return ListView.builder(
                 itemCount: rooms.length,
                 itemBuilder: (context, index) {
                   final room = rooms[index];
+                  final bool isUnread = room.readStatus[user.uid] == false;
                   final bool isSeller = user.uid == room.sellerId;
                   final otherUserId = room.participants.firstWhere(
                     (id) => id != user.uid,
@@ -83,43 +69,67 @@ class InboxScreen extends StatelessWidget {
                     builder: (context, userSnapshot) {
                       final userData = userSnapshot.data;
                       final otherUserName = userData?['username'] ?? 'Usuario';
-                      
-                      // Lógica de visualización:
-                      // Si soy el vendedor -> veo el nombre del interesado.
-                      // Si soy el interesado -> veo el título del anuncio.
                       final String displayTitle = isSeller ? otherUserName : room.propertyTitle;
 
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                          child: Text(displayTitle[0].toUpperCase()),
-                        ),
-                        title: Text(
-                          displayTitle,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: Text(
-                          room.lastMessage.isEmpty ? 'Nueva conversación' : room.lastMessage,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: const Icon(Icons.chevron_right, size: 20),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ChatScreen(
-                                chatRoomId: room.id,
-                                otherUserId: otherUserId,
-                                otherUserName: otherUserName,
-                                propertyTitle: room.propertyTitle,
-                                sellerId: room.sellerId,
-                              ),
+                      return Container(
+                        color: isUnread ? Theme.of(context).colorScheme.primary.withOpacity(0.05) : null,
+                        child: ListTile(
+                          leading: Badge(
+                            isLabelVisible: isUnread,
+                            backgroundColor: Colors.red,
+                            child: CircleAvatar(
+                              backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              child: Text(displayTitle[0].toUpperCase()),
                             ),
-                          );
-                        },
+                          ),
+                          title: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  displayTitle,
+                                  style: TextStyle(
+                                    fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+                                    fontSize: 16,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Text(
+                                _formatDateTime(room.lastMessageTime),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isUnread ? Theme.of(context).colorScheme.primary : Colors.grey,
+                                  fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
+                          subtitle: Text(
+                            room.lastMessage.isEmpty ? 'Nueva conversación' : room.lastMessage,
+                            style: TextStyle(
+                              fontWeight: isUnread ? FontWeight.w600 : FontWeight.normal,
+                              color: isUnread ? Colors.black87 : Colors.grey[600],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          onTap: () {
+                            firebaseService.markAsRead(room.id, user.uid);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ChatScreen(
+                                  chatRoomId: room.id,
+                                  otherUserId: otherUserId,
+                                  otherUserName: otherUserName,
+                                  propertyTitle: room.propertyTitle,
+                                  sellerId: room.sellerId,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       );
                     },
                   );
