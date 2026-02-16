@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/property.dart';
+import '../services/firebase_service.dart';
 
 class PropertyCard extends StatefulWidget {
   final Property property;
@@ -14,9 +16,23 @@ class PropertyCard extends StatefulWidget {
 
 class _PropertyCardState extends State<PropertyCard> {
   int _currentImageIndex = 0;
+  final FirebaseService _firebaseService = FirebaseService();
+
+  void _toggleFavorite() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Inicia sesión para guardar favoritos')),
+      );
+      return;
+    }
+    await _firebaseService.toggleFavorite(user.uid, widget.property.id);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
       decoration: BoxDecoration(
@@ -67,6 +83,35 @@ class _PropertyCardState extends State<PropertyCard> {
                               color: Colors.grey[100],
                               child: const Center(child: Icon(Icons.home_work_outlined, size: 50, color: Colors.grey)),
                             ),
+                    ),
+                    // Botón de Favorito
+                    Positioned(
+                      top: 16,
+                      left: 16,
+                      child: user == null 
+                        ? const SizedBox.shrink()
+                        : StreamBuilder<List<String>>(
+                          stream: _firebaseService.getUserFavorites(user.uid),
+                          builder: (context, snapshot) {
+                            final favorites = snapshot.data ?? [];
+                            final isFavorite = favorites.contains(widget.property.id);
+                            return GestureDetector(
+                              onTap: _toggleFavorite,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.9),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                                  color: isFavorite ? Colors.red : Colors.grey,
+                                  size: 20,
+                                ),
+                              ),
+                            );
+                          }
+                        ),
                     ),
                     Positioned(
                       top: 16,

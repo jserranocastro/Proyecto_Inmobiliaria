@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'search_screen.dart';
 import 'auth_screen.dart';
+import 'favorites_screen.dart'; // Importamos la nueva pantalla
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,7 +16,9 @@ class _MainScreenState extends State<MainScreen> {
 
   static const List<Widget> _screens = [
     HomeScreen(),
+    FavoritesScreen(), // Sustituimos el placeholder por la pantalla real
     SearchScreen(),
+    Center(child: Text('Pantalla de Mensajes', style: TextStyle(fontSize: 24))),
     AuthScreen(),
   ];
 
@@ -35,19 +38,32 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Colors.blueAccent,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
             label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_border),
+            activeIcon: Icon(Icons.favorite),
+            label: 'Favoritos',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.search),
             label: 'Buscar',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.message_outlined),
+            activeIcon: Icon(Icons.message),
+            label: 'Mensajes',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
             label: 'Cuenta',
           ),
         ],
