@@ -151,19 +151,40 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _login() async {
-    final email = _emailController.text.trim();
+    final usernameOrEmail = _usernameController.text.trim();
     final password = _passwordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
+    if (usernameOrEmail.isEmpty || password.isEmpty) {
       _showError('Por favor, rellena todos los campos');
       return;
     }
 
     setState(() => _isLoading = true);
     try {
+      String email = usernameOrEmail;
+
+      // Si no parece un email (no contiene @), buscamos el email asociado al nombre de usuario en Firestore
+      if (!usernameOrEmail.contains('@')) {
+        final userQuery = await _firestore
+            .collection('users')
+            .where('username', isEqualTo: usernameOrEmail)
+            .limit(1)
+            .get();
+
+        if (userQuery.docs.isEmpty) {
+          _showError('El nombre de usuario no existe');
+          setState(() => _isLoading = false);
+          return;
+        }
+
+        email = userQuery.docs.first.get('email');
+      }
+
       await _auth.signInWithEmailAndPassword(email: email, password: password);
     } on FirebaseAuthException catch (e) {
       _showError(e.message ?? 'Error de autenticación');
+    } catch (e) {
+      _showError('Error inesperado al iniciar sesión');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -176,7 +197,6 @@ class _AuthScreenState extends State<AuthScreen> {
       appBar: AppBar(
         title: Text(_isLogin ? 'Mi Cuenta' : 'Crear Cuenta'),
         surfaceTintColor: Colors.transparent,
-        // Añadimos botón de volver si es posible (por ejemplo si se abrió desde otra pantalla)
         leading: Navigator.canPop(context) 
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -232,7 +252,6 @@ class _AuthScreenState extends State<AuthScreen> {
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () {
-                // Cambiado pushReplacement por push para mantener la posibilidad de volver
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const AddPropertyScreen()),
@@ -286,12 +305,11 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
           const SizedBox(height: 40),
           TextField(
-            controller: _emailController,
+            controller: _usernameController,
             decoration: const InputDecoration(
-              labelText: 'Email',
-              prefixIcon: Icon(Icons.email_outlined),
+              labelText: 'Nombre de usuario o Email',
+              prefixIcon: Icon(Icons.person_outline),
             ),
-            keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 16),
           TextField(
