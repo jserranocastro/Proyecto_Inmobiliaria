@@ -72,27 +72,33 @@ class InboxScreen extends StatelessWidget {
                 itemCount: rooms.length,
                 itemBuilder: (context, index) {
                   final room = rooms[index];
+                  final bool isSeller = user.uid == room.sellerId;
                   final otherUserId = room.participants.firstWhere(
                     (id) => id != user.uid,
                     orElse: () => '',
                   );
-
-                  if (otherUserId.isEmpty) return const SizedBox();
 
                   return FutureBuilder<Map<String, dynamic>?>(
                     future: firebaseService.getUserData(otherUserId),
                     builder: (context, userSnapshot) {
                       final userData = userSnapshot.data;
                       final otherUserName = userData?['username'] ?? 'Usuario';
+                      
+                      // Lógica de visualización:
+                      // Si soy el vendedor -> veo el nombre del interesado.
+                      // Si soy el interesado -> veo el título del anuncio.
+                      final String displayTitle = isSeller ? otherUserName : room.propertyTitle;
 
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                          child: Text(otherUserName[0].toUpperCase()),
+                          child: Text(displayTitle[0].toUpperCase()),
                         ),
                         title: Text(
-                          otherUserName,
+                          displayTitle,
                           style: const TextStyle(fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         subtitle: Text(
                           room.lastMessage.isEmpty ? 'Nueva conversación' : room.lastMessage,
@@ -108,6 +114,8 @@ class InboxScreen extends StatelessWidget {
                                 chatRoomId: room.id,
                                 otherUserId: otherUserId,
                                 otherUserName: otherUserName,
+                                propertyTitle: room.propertyTitle,
+                                sellerId: room.sellerId,
                               ),
                             ),
                           );

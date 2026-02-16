@@ -10,7 +10,6 @@ class FirebaseService {
   CollectionReference get _usersRef => _db.collection('users');
   CollectionReference get _chatRoomsRef => _db.collection('chat_rooms');
 
-  // Obtener propiedades por ubicación exacta
   Stream<List<Property>> getPropertiesByLocation(String province, String city) {
     return _propertiesRef
         .where('province', isEqualTo: province)
@@ -23,7 +22,6 @@ class FirebaseService {
     });
   }
 
-  // Obtener todas las propiedades
   Stream<List<Property>> getProperties() {
     return _propertiesRef.snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
@@ -43,7 +41,6 @@ class FirebaseService {
     });
   }
 
-  // Búsqueda con filtros complejos
   Stream<List<Property>> searchProperties({
     required String city,
     required double minPrice,
@@ -80,8 +77,6 @@ class FirebaseService {
   Future<void> deleteProperty(String propertyId) {
     return _propertiesRef.doc(propertyId).delete();
   }
-
-  // --- Favoritos ---
 
   Future<void> toggleFavorite(String userId, String propertyId) async {
     final userDoc = _usersRef.doc(userId);
@@ -124,9 +119,9 @@ class FirebaseService {
     });
   }
 
-  // --- Mensajería / Chat ---
+  // --- Mensajería Mejorada ---
 
-  Future<String> getOrCreateChatRoom(String user1, String user2) async {
+  Future<String> getOrCreateChatRoom(String user1, String user2, String propertyTitle, String sellerId) async {
     List<String> ids = [user1, user2];
     ids.sort();
     String chatRoomId = ids.join('_');
@@ -137,6 +132,8 @@ class FirebaseService {
         'participants': ids,
         'lastMessage': '',
         'lastMessageTime': FieldValue.serverTimestamp(),
+        'propertyTitle': propertyTitle,
+        'sellerId': sellerId,
       });
     }
     return chatRoomId;

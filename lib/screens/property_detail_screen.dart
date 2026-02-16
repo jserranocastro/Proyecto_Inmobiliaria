@@ -36,7 +36,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       return;
     }
 
-    // Mostrar un indicador de carga mientras se crea el chat
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -44,8 +43,11 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     );
 
     try {
+      // Pasamos el título del anuncio y el ID del vendedor para guardarlos en la sala de chat
       final chatRoomId = await _firebaseService.getOrCreateChatRoom(
         currentUser.uid,
+        widget.property.userId,
+        widget.property.title,
         widget.property.userId,
       );
 
@@ -53,7 +55,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       final sellerName = userData?['username'] ?? 'Vendedor';
 
       if (mounted) {
-        Navigator.pop(context); // Quitar el indicador de carga
+        Navigator.pop(context);
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -61,6 +63,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
               chatRoomId: chatRoomId,
               otherUserId: widget.property.userId,
               otherUserName: sellerName,
+              propertyTitle: widget.property.title,
+              sellerId: widget.property.userId,
             ),
           ),
         );
@@ -228,7 +232,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
         ),
         child: ElevatedButton(
-          onPressed: _contactSeller, // Llama a la nueva función de contacto
+          onPressed: _contactSeller,
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 15),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

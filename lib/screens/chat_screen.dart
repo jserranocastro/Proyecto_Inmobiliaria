@@ -7,12 +7,16 @@ class ChatScreen extends StatefulWidget {
   final String chatRoomId;
   final String otherUserId;
   final String otherUserName;
+  final String propertyTitle;
+  final String sellerId;
 
   const ChatScreen({
     super.key,
     required this.chatRoomId,
     required this.otherUserId,
     required this.otherUserName,
+    required this.propertyTitle,
+    required this.sellerId,
   });
 
   @override
@@ -41,9 +45,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Si el usuario actual es el vendedor, ve el nombre del interesado.
+    // Si el usuario actual es el interesado, ve el título del inmueble.
+    final bool isSeller = _currentUserId == widget.sellerId;
+    final String displayTitle = isSeller ? widget.otherUserName : widget.propertyTitle;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.otherUserName),
+        title: Text(displayTitle),
         surfaceTintColor: Colors.transparent,
       ),
       body: Column(
