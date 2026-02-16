@@ -177,6 +177,13 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
       appBar: AppBar(
         title: Text(_isEditing ? 'Editar Inmueble' : 'Añadir Inmueble'),
         surfaceTintColor: Colors.transparent,
+        // Forzamos el botón de volver si hay historial
+        leading: Navigator.canPop(context) 
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.pop(context),
+            )
+          : null,
       ),
       body: _isLoadingLocations 
         ? const Center(child: CircularProgressIndicator())

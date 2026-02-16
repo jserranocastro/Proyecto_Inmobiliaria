@@ -176,6 +176,13 @@ class _AuthScreenState extends State<AuthScreen> {
       appBar: AppBar(
         title: Text(_isLogin ? 'Mi Cuenta' : 'Crear Cuenta'),
         surfaceTintColor: Colors.transparent,
+        // Añadimos botón de volver si es posible (por ejemplo si se abrió desde otra pantalla)
+        leading: Navigator.canPop(context) 
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              ) 
+            : null,
       ),
       body: StreamBuilder<User?>(
         stream: _auth.authStateChanges(),
@@ -225,7 +232,8 @@ class _AuthScreenState extends State<AuthScreen> {
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushReplacement(
+                // Cambiado pushReplacement por push para mantener la posibilidad de volver
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const AddPropertyScreen()),
                 );
