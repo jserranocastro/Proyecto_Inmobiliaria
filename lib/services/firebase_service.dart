@@ -1,11 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/property.dart';
+import '../models/chat_message.dart';
+import '../models/chat_room.dart';
 
 class FirebaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   CollectionReference get _propertiesRef => _db.collection('properties');
   CollectionReference get _usersRef => _db.collection('users');
+  CollectionReference get _chatRoomsRef => _db.collection('chat_rooms');
 
   // Obtener propiedades por ubicación exacta
   Stream<List<Property>> getPropertiesByLocation(String province, String city) {
@@ -20,7 +23,7 @@ class FirebaseService {
     });
   }
 
-  // Obtener todas las propiedades (mantenemos por compatibilidad)
+  // Obtener todas las propiedades
   Stream<List<Property>> getProperties() {
     return _propertiesRef.snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
@@ -111,9 +114,6 @@ class FirebaseService {
 
   Stream<List<Property>> getFavoriteProperties(List<String> favoriteIds) {
     if (favoriteIds.isEmpty) return Stream.value([]);
-    
-    // Firestore whereIn tiene límite de 10 elementos, para este ejemplo básico lo usaremos así
-    // En una app real con muchos favoritos habría que paginar o pedir uno a uno
     return _propertiesRef
         .where(FieldPath.documentId, whereIn: favoriteIds.take(10).toList())
         .snapshots()
@@ -122,5 +122,58 @@ class FirebaseService {
         return Property.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).toList();
     });
+  }
+
+  // --- Mensajería / Chat ---
+
+  Future<String> getOrCreateChatRoom(String user1, String user2) async {
+    List<String> ids = [user1, user2];
+    ids.sort();
+    String chatRoomId = ids.join('_');
+
+    final doc = await _chatRoomsRef.doc(chatRoomId).get();
+    if (!doc.exists) {
+      await _chatRoomsRef.doc(chatRoomId).set({
+        'participants': ids,
+        'lastMessage': '',
+        'lastMessageTime': FieldValue.serverTimestamp(),
+      });
+    }
+    return chatRoomId;
+  }
+
+  Future<void> sendMessage(String chatRoomId, ChatMessage message) async {
+    await _chatRoomsRef.doc(chatRoomId).collection('messages').add(message.toMap());
+    
+    await _chatRoomsRef.doc(chatRoomId).update({
+      'lastMessage': message.text,
+      'lastMessageTime': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Stream<List<ChatMessage>> getMessages(String chatRoomId) {
+    return _chatRoomsRef
+        .doc(chatRoomId)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) => ChatMessage.fromFirestore(doc)).toList();
+    });
+  }
+
+  Stream<List<ChatRoom>> getUserChatRooms(String userId) {
+    return _chatRoomsRef
+        .where('participants', arrayContains: userId)
+        .orderBy('lastMessageTime', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) => ChatRoom.fromFirestore(doc)).toList();
+    });
+  }
+
+  Future<Map<String, dynamic>?> getUserData(String userId) async {
+    final doc = await _usersRef.doc(userId).get();
+    return doc.data() as Map<String, dynamic>?;
   }
 }

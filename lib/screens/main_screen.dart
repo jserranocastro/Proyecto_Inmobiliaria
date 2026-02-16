@@ -3,6 +3,7 @@ import 'home_screen.dart';
 import 'search_screen.dart';
 import 'auth_screen.dart';
 import 'favorites_screen.dart';
+import 'inbox_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -14,12 +15,11 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  // Quitamos el 'static const' para asegurar que las pantallas puedan reconstruirse si es necesario
   final List<Widget> _screens = [
     const HomeScreen(),
     const FavoritesScreen(),
     const SearchScreen(),
-    const Center(child: Text('Pantalla de Mensajes', style: TextStyle(fontSize: 24))),
+    const InboxScreen(), // Actualizado: Ahora usa InboxScreen
     const AuthScreen(),
   ];
 
@@ -32,8 +32,6 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Usamos IndexedStack para mantener el estado de las pantallas, 
-      // pero ahora la lista no es estática.
       body: IndexedStack(
         index: _selectedIndex,
         children: _screens,

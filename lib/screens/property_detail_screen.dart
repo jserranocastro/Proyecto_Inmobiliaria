@@ -1,7 +1,9 @@
 import 'dart:convert';
-import 'dart:typed_data';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/property.dart';
+import '../services/firebase_service.dart';
+import 'chat_screen.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
   final Property property;
@@ -14,7 +16,64 @@ class PropertyDetailScreen extends StatefulWidget {
 
 class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   final PageController _pageController = PageController();
+  final FirebaseService _firebaseService = FirebaseService();
   int _currentPage = 0;
+
+  void _contactSeller() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Debes iniciar sesión para contactar')),
+      );
+      return;
+    }
+
+    if (currentUser.uid == widget.property.userId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Este anuncio es tuyo')),
+      );
+      return;
+    }
+
+    // Mostrar un indicador de carga mientras se crea el chat
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final chatRoomId = await _firebaseService.getOrCreateChatRoom(
+        currentUser.uid,
+        widget.property.userId,
+      );
+
+      final userData = await _firebaseService.getUserData(widget.property.userId);
+      final sellerName = userData?['username'] ?? 'Vendedor';
+
+      if (mounted) {
+        Navigator.pop(context); // Quitar el indicador de carga
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(
+              chatRoomId: chatRoomId,
+              otherUserId: widget.property.userId,
+              otherUserName: sellerName,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al crear el chat: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +88,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 children: [
-                  // Carrusel de Imágenes
                   if (property.images.isNotEmpty)
                     PageView.builder(
                       controller: _pageController,
@@ -55,7 +113,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       child: const Icon(Icons.home, size: 100, color: Colors.white),
                     ),
                   
-                  // Flechas de navegación
                   if (property.images.length > 1) ...[
                     Positioned(
                       left: 10,
@@ -91,7 +148,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     ),
                   ],
 
-                  // Indicador de página (opcional)
                   if (property.images.length > 1)
                     Positioned(
                       bottom: 20,
@@ -172,9 +228,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
         ),
         child: ElevatedButton(
-          onPressed: () {
-            // TODO: Implement contact logic
-          },
+          onPressed: _contactSeller, // Llama a la nueva función de contacto
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 15),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
