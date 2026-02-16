@@ -353,13 +353,42 @@ class _AuthScreenState extends State<AuthScreen> {
           backgroundColor: Colors.grey[200],
           valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (_currentStep > 0)
+                IconButton(
+                  onPressed: () => setState(() => _currentStep--),
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  tooltip: 'Volver',
+                )
+              else
+                IconButton(
+                  onPressed: () => setState(() => _isLogin = true),
+                  icon: const Icon(Icons.close_rounded),
+                  tooltip: 'Cancelar registro',
+                ),
+              if (_isLoading)
+                const SizedBox(width: 48, height: 48, child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 3)))
+              else
+                IconButton(
+                  onPressed: _nextStep,
+                  icon: Icon(_currentStep == 3 ? Icons.check_rounded : Icons.arrow_forward_ios_rounded),
+                  color: Theme.of(context).colorScheme.primary,
+                  tooltip: _currentStep == 3 ? 'Finalizar' : 'Continuar',
+                ),
+            ],
+          ),
+        ),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(32.0),
+            padding: const EdgeInsets.symmetric(horizontal: 32.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 20),
+                const SizedBox(height: 8),
                 Text(
                   _getStepTitle(),
                   textAlign: TextAlign.center,
@@ -368,37 +397,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(height: 32),
                 _buildCurrentStepFields(),
                 const SizedBox(height: 40),
-                if (_isLoading)
-                  const Center(child: CircularProgressIndicator())
-                else
-                  Row(
-                    children: [
-                      if (_currentStep > 0)
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => setState(() => _currentStep--),
-                            child: const Text('Volver'),
-                          ),
-                        ),
-                      if (_currentStep > 0) const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _nextStep,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.primary,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: Text(_currentStep == 3 ? 'Finalizar' : 'Continuar'),
-                        ),
-                      ),
-                    ],
-                  ),
-                const SizedBox(height: 16),
-                if (_currentStep == 0)
-                  TextButton(
-                    onPressed: () => setState(() => _isLogin = true),
-                    child: const Text('¿Ya tienes cuenta? Inicia sesión'),
-                  ),
+                // Botones inferiores eliminados para consistencia con la navegación superior
               ],
             ),
           ),
@@ -522,17 +521,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
-                    onPressed: () async {
-                      await _auth.signOut();
-                      await _prefsService.clearDefaultLocation(); // Limpiamos al cerrar sesión
-                      setState(() {
-                        _registrationSuccess = false;
-                        _isLogin = true;
-                        _currentStep = 0;
-                        _defaultProvince = null;
-                        _defaultCity = null;
-                      });
-                    },
+                    onPressed: () => _confirmLogout(context),
                   )
                 ],
               ),
@@ -645,6 +634,41 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void _confirmLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cerrar sesión'),
+        content: const Text('¿Seguro que quiere cerrar sesión?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await _auth.signOut();
+              if (mounted) {
+                setState(() {
+                  _registrationSuccess = false;
+                  _isLogin = true;
+                  _currentStep = 0;
+                });
+                Navigator.pop(context);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent, 
+              foregroundColor: Colors.white,
+              elevation: 0,
+            ),
+            child: const Text('Aceptar'),
+          ),
+        ],
+      ),
     );
   }
 
