@@ -163,7 +163,6 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       String email = usernameOrEmail;
 
-      // Si no parece un email (no contiene @), buscamos el email asociado al nombre de usuario en Firestore
       if (!usernameOrEmail.contains('@')) {
         final userQuery = await _firestore
             .collection('users')
@@ -523,12 +522,15 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
-                    onPressed: () {
-                      _auth.signOut();
+                    onPressed: () async {
+                      await _auth.signOut();
+                      await _prefsService.clearDefaultLocation(); // Limpiamos al cerrar sesión
                       setState(() {
                         _registrationSuccess = false;
                         _isLogin = true;
                         _currentStep = 0;
+                        _defaultProvince = null;
+                        _defaultCity = null;
                       });
                     },
                   )
@@ -552,7 +554,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.location_on, color: Color(0xFF0052D4)),
                   title: const Text('Definir ubicación', style: TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text(_defaultCity != null ? '$_defaultCity, $_defaultProvince' : 'No definida'),
+                  subtitle: Text(_defaultCity != null && _defaultProvince != null 
+                    ? '$_defaultCity, $_defaultProvince' 
+                    : 'Seleccionar ubicación'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: _showLocationDialog,
                 ),
