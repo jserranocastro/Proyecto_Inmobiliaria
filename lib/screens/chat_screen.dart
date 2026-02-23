@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -51,7 +50,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _sendImage(ImageSource source) async {
     final XFile? image = await _picker.pickImage(
       source: source,
-      imageQuality: 50, // Comprimimos para no exceder límites de Firestore (1MB por doc)
+      imageQuality: 50,
       maxWidth: 800,
     );
 
@@ -69,6 +68,30 @@ class _ChatScreenState extends State<ChatScreen> {
       );
 
       await _firebaseService.sendMessage(widget.chatRoomId, message);
+    }
+  }
+
+  void _deleteMessage(String messageId) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar mensaje'),
+        content: const Text('¿Estás seguro de que quieres eliminar este mensaje? No se podrá recuperar.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('CANCELAR'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('ELIMINAR', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _firebaseService.deleteMessage(widget.chatRoomId, messageId);
     }
   }
 
@@ -132,35 +155,38 @@ class _ChatScreenState extends State<ChatScreen> {
 
                     return Align(
                       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: message.type == MessageType.text 
-                          ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10)
-                          : const EdgeInsets.all(4),
-                        constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isMe ? Theme.of(context).colorScheme.primary : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(20).copyWith(
-                            bottomRight: isMe ? const Radius.circular(0) : const Radius.circular(20),
-                            bottomLeft: !isMe ? const Radius.circular(0) : const Radius.circular(20),
+                      child: GestureDetector(
+                        onLongPress: isMe ? () => _deleteMessage(message.id) : null,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: message.type == MessageType.text 
+                            ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10)
+                            : const EdgeInsets.all(4),
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.7,
                           ),
+                          decoration: BoxDecoration(
+                            color: isMe ? Theme.of(context).colorScheme.primary : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(20).copyWith(
+                              bottomRight: isMe ? const Radius.circular(0) : const Radius.circular(20),
+                              bottomLeft: !isMe ? const Radius.circular(0) : const Radius.circular(20),
+                            ),
+                          ),
+                          child: message.type == MessageType.text
+                              ? Text(
+                                  message.text,
+                                  style: TextStyle(
+                                    color: isMe ? Colors.white : Colors.black,
+                                  ),
+                                )
+                              : ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.memory(
+                                    base64Decode(message.imageBase64!),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
                         ),
-                        child: message.type == MessageType.text
-                            ? Text(
-                                message.text,
-                                style: TextStyle(
-                                  color: isMe ? Colors.white : Colors.black,
-                                ),
-                              )
-                            : ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Image.memory(
-                                  base64Decode(message.imageBase64!),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
                       ),
                     );
                   },

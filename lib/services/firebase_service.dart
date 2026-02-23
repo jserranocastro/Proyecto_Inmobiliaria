@@ -153,6 +153,10 @@ class FirebaseService {
     });
   }
 
+  Future<void> deleteMessage(String chatRoomId, String messageId) async {
+    await _chatRoomsRef.doc(chatRoomId).collection('messages').doc(messageId).delete();
+  }
+
   Future<void> markAsRead(String chatRoomId, String userId) async {
     await _chatRoomsRef.doc(chatRoomId).update({
       'readStatus.$userId': true,
