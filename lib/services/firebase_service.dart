@@ -143,9 +143,11 @@ class FirebaseService {
   Future<void> sendMessage(String chatRoomId, ChatMessage message) async {
     await _chatRoomsRef.doc(chatRoomId).collection('messages').add(message.toMap());
     
+    String lastMessageText = message.type == MessageType.image ? '📷 Foto' : message.text;
+
     // Al enviar, el receptor tiene el mensaje como "no leído"
     await _chatRoomsRef.doc(chatRoomId).update({
-      'lastMessage': message.text,
+      'lastMessage': lastMessageText,
       'lastMessageTime': FieldValue.serverTimestamp(),
       'readStatus.${message.receiverId}': false,
     });
