@@ -43,7 +43,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     );
 
     try {
-      // Pasamos el título del anuncio y el ID del vendedor para guardarlos en la sala de chat
       final chatRoomId = await _firebaseService.getOrCreateChatRoom(
         currentUser.uid,
         widget.property.userId,
@@ -89,6 +88,16 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
+            leading: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: CircleAvatar(
+                backgroundColor: Colors.white.withOpacity(0.9),
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.black, size: 28),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ),
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 children: [
@@ -123,14 +132,17 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       top: 0,
                       bottom: 0,
                       child: Center(
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 30),
-                          onPressed: () {
-                            _pageController.previousPage(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
-                          },
+                        child: CircleAvatar(
+                          backgroundColor: Colors.black26,
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+                            onPressed: () {
+                              _pageController.previousPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),
@@ -139,14 +151,17 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       top: 0,
                       bottom: 0,
                       child: Center(
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 30),
-                          onPressed: () {
-                            _pageController.nextPage(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
-                          },
+                        child: CircleAvatar(
+                          backgroundColor: Colors.black26,
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
+                            onPressed: () {
+                              _pageController.nextPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),
@@ -188,8 +203,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       '${property.price.toStringAsFixed(0)} €${property.isForRent ? "/mes" : ""}',
                       style: const TextStyle(
                         fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blueAccent,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.black,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -235,6 +250,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           onPressed: _contactSeller,
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 15),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
           child: const Text('Contactar', style: TextStyle(fontSize: 18)),
@@ -254,9 +271,12 @@ class _FeatureIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, size: 30, color: Colors.blueAccent),
+        Icon(icon, size: 30, color: Colors.black),
         const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+        Text(
+          label, 
+          style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.black)
+        ),
       ],
     );
   }

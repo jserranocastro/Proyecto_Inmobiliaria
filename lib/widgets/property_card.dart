@@ -127,7 +127,7 @@ class _PropertyCardState extends State<PropertyCard> {
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: const Color(0xFF8E44AD),
                             letterSpacing: 1,
                           ),
                         ),
@@ -169,7 +169,7 @@ class _PropertyCardState extends State<PropertyCard> {
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF0052D4),
+                              color: Color(0xFF8E44AD),
                             ),
                           ),
                         ],
@@ -221,7 +221,7 @@ class _PropertyCardState extends State<PropertyCard> {
   Widget _buildInfoItem(IconData icon, String label) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: const Color(0xFF4361EE)),
+        Icon(icon, size: 18, color: const Color(0xFFBB8FCE)),
         const SizedBox(width: 6),
         Text(
           label,

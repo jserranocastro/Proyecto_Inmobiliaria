@@ -58,7 +58,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 children: [
                   const Text(
                     'Ubicación obligatoria',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF0052D4)),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF8E44AD)),
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
@@ -98,7 +98,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         child: ChoiceChip(
                           label: const Center(child: Text('Alquiler')),
                           selected: _isForRent,
-                          selectedColor: const Color(0xFF0052D4).withOpacity(0.2),
+                          selectedColor: const Color(0xFF8E44AD).withOpacity(0.2),
                           onSelected: (val) => setState(() => _isForRent = true),
                         ),
                       ),
@@ -107,7 +107,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         child: ChoiceChip(
                           label: const Center(child: Text('Compra')),
                           selected: !_isForRent,
-                          selectedColor: const Color(0xFF0052D4).withOpacity(0.2),
+                          selectedColor: const Color(0xFF8E44AD).withOpacity(0.2),
                           onSelected: (val) => setState(() => _isForRent = false),
                         ),
                       ),
@@ -121,7 +121,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     min: 0,
                     max: 1000000,
                     divisions: 100,
-                    activeColor: const Color(0xFF0052D4),
+                    activeColor: const Color(0xFF8E44AD),
                     onChanged: (values) => setState(() => _priceRange = values),
                   ),
                   const SizedBox(height: 16),
@@ -183,7 +183,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           : null,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 18),
-                        backgroundColor: const Color(0xFF0052D4),
+                        backgroundColor: const Color(0xFF8E44AD),
                         foregroundColor: Colors.white,
                         disabledBackgroundColor: Colors.grey[300],
                       ),

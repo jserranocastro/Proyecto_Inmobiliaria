@@ -500,10 +500,10 @@ class _AuthScreenState extends State<AuthScreen> {
                       shape: BoxShape.circle,
                       border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2),
                     ),
-                    child: const CircleAvatar(
+                    child: CircleAvatar(
                       radius: 35,
                       backgroundColor: Colors.white,
-                      child: Icon(Icons.person, color: Color(0xFF0052D4), size: 40),
+                      child: Icon(Icons.person, color: Theme.of(context).colorScheme.primary, size: 40),
                     ),
                   ),
                   const SizedBox(width: 20),
@@ -541,7 +541,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.location_on, color: Color(0xFF0052D4)),
+                  leading: Icon(Icons.location_on, color: Theme.of(context).colorScheme.primary),
                   title: const Text('Definir ubicación', style: TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: Text(_defaultCity != null && _defaultProvince != null 
                     ? '$_defaultCity, $_defaultProvince' 
@@ -553,13 +553,13 @@ class _AuthScreenState extends State<AuthScreen> {
             ],
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.fromLTRB(24, 24, 24, 8),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
           child: Row(
             children: [
-              Icon(Icons.home_work_rounded, color: Color(0xFF0052D4), size: 20),
-              SizedBox(width: 8),
-              Text(
+              Icon(Icons.home_work_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
+              const SizedBox(width: 8),
+              const Text(
                 'Mis Anuncios',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
@@ -607,7 +607,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           children: [
                             _buildActionButton(
                               icon: Icons.edit,
-                              color: Colors.blue,
+                              color: const Color(0xFFBB8FCE),
                               onPressed: () {
                                 Navigator.push(
                                   context,
@@ -620,7 +620,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             const SizedBox(width: 8),
                             _buildActionButton(
                               icon: Icons.delete,
-                              color: Colors.red,
+                              color: Colors.redAccent,
                               onPressed: () => _confirmDelete(context, property.id),
                             ),
                           ],

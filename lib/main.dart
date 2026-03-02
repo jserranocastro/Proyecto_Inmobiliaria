@@ -35,21 +35,21 @@ class RealEstateApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0052D4),
-          primary: const Color(0xFF0052D4),
-          secondary: const Color(0xFF4361EE),
+          seedColor: const Color(0xFF8E44AD),
+          primary: const Color(0xFF8E44AD),
+          secondary: const Color(0xFFD7BDE2),
           surface: Colors.white,
         ),
         textTheme: GoogleFonts.montserratTextTheme(),
         appBarTheme: AppBarTheme(
           centerTitle: true,
           backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF0052D4),
+          foregroundColor: const Color(0xFF8E44AD),
           elevation: 0,
           titleTextStyle: GoogleFonts.montserrat(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF0052D4),
+            color: const Color(0xFF8E44AD),
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
@@ -74,7 +74,7 @@ class RealEstateApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF0052D4), width: 1),
+            borderSide: const BorderSide(color: Color(0xFF8E44AD), width: 1),
           ),
         ),
       ),
