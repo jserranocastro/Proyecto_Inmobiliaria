@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         ),
         padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
           top: 12,
           left: 24,
           right: 24,
@@ -117,9 +117,13 @@ class _HomeScreenState extends State<HomeScreen> {
               const Text('Cambiar Ubicación', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 24),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 value: _selectedProvince,
                 decoration: const InputDecoration(labelText: 'Provincia'),
-                items: _provinces.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
+                items: _provinces.map((p) => DropdownMenuItem(
+                  value: p, 
+                  child: Text(p, overflow: TextOverflow.ellipsis)
+                )).toList(),
                 onChanged: (val) {
                   setSheetState(() {
                     _selectedProvince = val;
@@ -130,9 +134,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 value: _selectedCity,
                 decoration: const InputDecoration(labelText: 'Municipio'),
-                items: _municipios.map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                items: _municipios.map((m) => DropdownMenuItem(
+                  value: m, 
+                  child: Text(m, overflow: TextOverflow.ellipsis)
+                )).toList(),
                 onChanged: _selectedProvince == null ? null : (val) {
                   setSheetState(() => _selectedCity = val);
                 },
@@ -158,7 +166,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: const Text('APLICAR FILTRO', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
                 ),
               ),
-              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -208,12 +215,20 @@ class _HomeScreenState extends State<HomeScreen> {
                               Text(
                                 _selectedCity ?? 'Seleccionar ubicación',
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                               if (_selectedProvince != null)
-                                Text(_selectedProvince!, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                                Text(
+                                  _selectedProvince!, 
+                                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                             ],
                           ),
                         ),
+                        const SizedBox(width: 8),
                         const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
                       ],
                     ),
@@ -222,41 +237,43 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: (_selectedProvince == null || _selectedCity == null)
                       ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 40),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.location_city_rounded, size: 100, color: const Color(0xFF8E44AD).withOpacity(0.1)),
-                                const SizedBox(height: 24),
-                                const Text(
-                                  'Encuentra tu próximo hogar',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Elige una ubicación para ver los mejores inmuebles disponibles en tu zona.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.grey[600], height: 1.5),
-                                ),
-                                const SizedBox(height: 32),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton(
-                                    onPressed: _showChangeLocationSheet,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF8E44AD),
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 18),
-                                      elevation: 8,
-                                      shadowColor: const Color(0xFF8E44AD).withOpacity(0.5),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                    ),
-                                    child: const Text('BUSCAR AHORA', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+                          child: SingleChildScrollView(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.location_city_rounded, size: 100, color: const Color(0xFF8E44AD).withOpacity(0.1)),
+                                  const SizedBox(height: 24),
+                                  const Text(
+                                    'Encuentra tu próximo hogar',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                   ),
-                                )
-                              ],
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Elige una ubicación para ver los mejores inmuebles disponibles en tu zona.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Colors.grey[600], height: 1.5),
+                                  ),
+                                  const SizedBox(height: 32),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: _showChangeLocationSheet,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFF8E44AD),
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 18),
+                                        elevation: 8,
+                                        shadowColor: const Color(0xFF8E44AD).withOpacity(0.5),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                      ),
+                                      child: const Text('BUSCAR AHORA', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+                                    ),
+                                  )
+                                ],
+                              ),
                             ),
                           ),
                         )
@@ -271,15 +288,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
                             if (properties.isEmpty) {
                               return Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.sentiment_dissatisfied, size: 64, color: Colors.grey[300]),
-                                    const SizedBox(height: 16),
-                                    const Text('No hay inmuebles en esta zona', style: TextStyle(fontWeight: FontWeight.bold)),
-                                    const SizedBox(height: 8),
-                                    Text('¡Sé el primero en publicar uno!', style: TextStyle(color: Colors.grey[600])),
-                                  ],
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.sentiment_dissatisfied, size: 64, color: Colors.grey[300]),
+                                      const SizedBox(height: 16),
+                                      const Text('No hay inmuebles en esta zona', style: TextStyle(fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 8),
+                                      Text('¡Sé el primero en publicar uno!', style: TextStyle(color: Colors.grey[600])),
+                                    ],
+                                  ),
                                 ),
                               );
                             }
