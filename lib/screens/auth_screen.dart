@@ -140,6 +140,10 @@ class _AuthScreenState extends State<AuthScreen> {
 
       await userCredential.user!.updateDisplayName(_usernameController.text.trim());
       
+      // Al registrar un usuario nuevo, limpiamos cualquier ubicación previa guardada en el dispositivo
+      await _prefsService.clearDefaultLocation();
+      await _loadDefaultLocation();
+      
       setState(() {
         _isLoading = false;
         _registrationSuccess = true;
@@ -650,12 +654,16 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
+              // Limpiamos la ubicación al cerrar sesión para evitar que el siguiente usuario la herede
+              await _prefsService.clearDefaultLocation();
               await _auth.signOut();
               if (mounted) {
                 setState(() {
                   _registrationSuccess = false;
                   _isLogin = true;
                   _currentStep = 0;
+                  _defaultProvince = null;
+                  _defaultCity = null;
                 });
                 Navigator.pop(context);
               }
