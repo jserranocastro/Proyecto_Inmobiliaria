@@ -89,6 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showChangeLocationSheet() {
+    final primaryColor = Theme.of(context).colorScheme.primary;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -156,11 +157,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         }
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8E44AD),
+                    backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     elevation: 4,
-                    shadowColor: const Color(0xFF8E44AD).withOpacity(0.4),
+                    shadowColor: primaryColor.withOpacity(0.4),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                   child: const Text('APLICAR FILTRO', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
@@ -175,6 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FD),
       appBar: AppBar(
@@ -202,10 +204,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF8E44AD).withOpacity(0.1),
+                            color: primaryColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.location_on, color: Color(0xFF8E44AD), size: 20),
+                          child: Icon(Icons.location_on, color: primaryColor, size: 20),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -243,7 +245,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.location_city_rounded, size: 100, color: const Color(0xFF8E44AD).withOpacity(0.1)),
+                                  Icon(Icons.location_city_rounded, size: 100, color: primaryColor.withOpacity(0.1)),
                                   const SizedBox(height: 24),
                                   const Text(
                                     'Encuentra tu próximo hogar',
@@ -262,11 +264,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: ElevatedButton(
                                       onPressed: _showChangeLocationSheet,
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFF8E44AD),
+                                        backgroundColor: primaryColor,
                                         foregroundColor: Colors.white,
                                         padding: const EdgeInsets.symmetric(vertical: 18),
                                         elevation: 8,
-                                        shadowColor: const Color(0xFF8E44AD).withOpacity(0.5),
+                                        shadowColor: primaryColor.withOpacity(0.5),
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                       ),
                                       child: const Text('BUSCAR AHORA', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
@@ -327,7 +329,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _onAddProperty,
-        backgroundColor: const Color(0xFF8E44AD),
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 12,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

@@ -32,6 +32,7 @@ class _PropertyCardState extends State<PropertyCard> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
@@ -127,7 +128,7 @@ class _PropertyCardState extends State<PropertyCard> {
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFF8E44AD),
+                            color: primaryColor,
                             letterSpacing: 1,
                           ),
                         ),
@@ -166,10 +167,10 @@ class _PropertyCardState extends State<PropertyCard> {
                         children: [
                           Text(
                             '${widget.property.price.toStringAsFixed(0)} €${widget.property.isForRent ? "/mes" : ""}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF8E44AD),
+                              color: primaryColor,
                             ),
                           ),
                         ],
@@ -202,9 +203,9 @@ class _PropertyCardState extends State<PropertyCard> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildInfoItem(Icons.king_bed_outlined, '${widget.property.bedrooms} hab.'),
-                          _buildInfoItem(Icons.bathtub_outlined, '${widget.property.bathrooms} baños'),
-                          _buildInfoItem(Icons.square_foot, '${widget.property.area.toStringAsFixed(0)} m²'),
+                          _buildInfoItem(Icons.king_bed_outlined, '${widget.property.bedrooms} hab.', primaryColor),
+                          _buildInfoItem(Icons.bathtub_outlined, '${widget.property.bathrooms} baños', primaryColor),
+                          _buildInfoItem(Icons.square_foot, '${widget.property.area.toStringAsFixed(0)} m²', primaryColor),
                         ],
                       ),
                     ],
@@ -218,10 +219,10 @@ class _PropertyCardState extends State<PropertyCard> {
     );
   }
 
-  Widget _buildInfoItem(IconData icon, String label) {
+  Widget _buildInfoItem(IconData icon, String label, Color color) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: const Color(0xFFBB8FCE)),
+        Icon(icon, size: 18, color: color.withOpacity(0.6)),
         const SizedBox(width: 6),
         Text(
           label,
