@@ -154,7 +154,33 @@ class FirebaseService {
   }
 
   Future<void> deleteMessage(String chatRoomId, String messageId) async {
-    await _chatRoomsRef.doc(chatRoomId).collection('messages').doc(messageId).delete();
+    final roomRef = _chatRoomsRef.doc(chatRoomId);
+    
+    // 1. Borrar el mensaje de la subcolección
+    await roomRef.collection('messages').doc(messageId).delete();
+
+    // 2. Buscar el nuevo mensaje más reciente para actualizar la vista previa en la bandeja de entrada
+    final lastMessages = await roomRef.collection('messages')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .get();
+
+    if (lastMessages.docs.isNotEmpty) {
+      final lastMsgDoc = lastMessages.docs.first;
+      final lastMsg = ChatMessage.fromFirestore(lastMsgDoc);
+      String lastMessageText = lastMsg.type == MessageType.image ? '📷 Foto' : lastMsg.text;
+
+      await roomRef.update({
+        'lastMessage': lastMessageText,
+        'lastMessageTime': lastMsgDoc['timestamp'],
+      });
+    } else {
+      // Si ya no quedan mensajes en el chat
+      await roomRef.update({
+        'lastMessage': '',
+        // Mantenemos el lastMessageTime anterior o podríamos dejarlo igual
+      });
+    }
   }
 
   Future<void> markAsRead(String chatRoomId, String userId) async {
