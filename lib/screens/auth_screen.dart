@@ -518,8 +518,15 @@ class _AuthScreenState extends State<AuthScreen> {
                         Text(
                           user.displayName ?? 'Usuario',
                           style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        Text(user.email ?? '', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+                        Text(
+                          user.email ?? '', 
+                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ],
                     ),
                   ),
@@ -547,9 +554,13 @@ class _AuthScreenState extends State<AuthScreen> {
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.location_on, color: Theme.of(context).colorScheme.primary),
                   title: const Text('Definir ubicación', style: TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text(_defaultCity != null && _defaultProvince != null 
+                  subtitle: Text(
+                    _defaultCity != null && _defaultProvince != null 
                     ? '$_defaultCity, $_defaultProvince' 
-                    : 'Seleccionar ubicación'),
+                    : 'Seleccionar ubicación',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: _showLocationDialog,
                 ),
@@ -735,30 +746,41 @@ class _AuthScreenState extends State<AuthScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Definir ubicación por defecto'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                value: selectedProv,
-                decoration: const InputDecoration(labelText: 'Provincia'),
-                items: provinces.map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 14)))).toList(),
-                onChanged: (val) {
-                  setDialogState(() {
-                    selectedProv = val;
-                    selectedCity = null;
-                    cities = _locationService.getMunicipios(val!);
-                  });
-                },
-              ),
-              const SizedBox(height: 15),
-              DropdownButtonFormField<String>(
-                value: selectedCity,
-                decoration: const InputDecoration(labelText: 'Municipio'),
-                items: cities.map((m) => DropdownMenuItem(value: m, child: Text(m, style: const TextStyle(fontSize: 14)))).toList(),
-                onChanged: selectedProv == null ? null : (val) => setDialogState(() => selectedCity = val),
-              ),
-            ],
+          title: const Text('Ubicación por defecto'),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  value: selectedProv,
+                  decoration: const InputDecoration(labelText: 'Provincia'),
+                  items: provinces.map((p) => DropdownMenuItem(
+                    value: p, 
+                    child: Text(p, style: const TextStyle(fontSize: 14), overflow: TextOverflow.ellipsis)
+                  )).toList(),
+                  onChanged: (val) {
+                    setDialogState(() {
+                      selectedProv = val;
+                      selectedCity = null;
+                      cities = _locationService.getMunicipios(val!);
+                    });
+                  },
+                ),
+                const SizedBox(height: 15),
+                DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  value: selectedCity,
+                  decoration: const InputDecoration(labelText: 'Municipio'),
+                  items: cities.map((m) => DropdownMenuItem(
+                    value: m, 
+                    child: Text(m, style: const TextStyle(fontSize: 14), overflow: TextOverflow.ellipsis)
+                  )).toList(),
+                  onChanged: selectedProv == null ? null : (val) => setDialogState(() => selectedCity = val),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
