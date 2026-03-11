@@ -1,0 +1,43 @@
+@startuml
+skinparam Linetype ortho
+
+entity Users {
+  * uid : String <<PK>>
+  --
+  email : String
+  favorites : List<String>
+}
+
+entity Properties {
+  * id : String <<PK>>
+  --
+  userId : String <<FK>>
+  title : String
+  price : Double
+  city : String
+  province : String
+  images : List<String>
+}
+
+entity ChatRooms {
+  * id : String <<PK>>
+  --
+  participants : List<String>
+  lastMessage : String
+  lastMessageTime : Timestamp
+}
+
+entity Messages {
+  * id : String <<PK>>
+  --
+  chatRoomId : String <<FK>>
+  senderId : String
+  text : String
+  timestamp : Timestamp
+}
+
+Users "1" -- "0..*" Properties : publica
+Users "1" -- "0..*" ChatRooms : participa
+ChatRooms "1" -- "0..*" Messages : contiene
+Properties "1" -- "0..*" ChatRooms : genera interés
+@enduml

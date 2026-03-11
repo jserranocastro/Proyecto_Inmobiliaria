@@ -1,0 +1,35 @@
+@startuml
+package "Models" {
+  class Property
+  class ChatMessage
+  class ChatRoom
+}
+
+package "Services" {
+  class FirebaseService {
+    +getProperties()
+    +addProperty()
+    +sendMessage()
+    +getOrCreateChatRoom()
+  }
+  class LocationService {
+    +init()
+    +getProvinces()
+    +getMunicipios()
+  }
+}
+
+package "Screens" {
+  class MainScreen
+  class ChatScreen
+  class AddPropertyScreen
+  class SearchScreen
+}
+
+MainScreen --> FirebaseService
+AddPropertyScreen --> LocationService
+SearchScreen --> FirebaseService
+FirebaseService ..> Property : maneja
+FirebaseService ..> ChatMessage : envía
+FirebaseService ..> ChatRoom : gestiona
+@enduml
