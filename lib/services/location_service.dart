@@ -1,9 +1,12 @@
 import 'package:flutter/services.dart';
 import 'package:csv/csv.dart';
 
+/// Servicio para gestionar la carga y filtrado de provincias y municipios desde un CSV
 class LocationService {
+  // Cache en memoria para evitar recargar el CSV constantemente
   static final Map<String, List<String>> _provinceMunicipios = {};
   
+  // Mapeo de códigos de provincia INE a nombres legibles
   static final Map<String, String> _provinceNames = {
     '01': 'Álava', '02': 'Albacete', '03': 'Alicante', '04': 'Almería', '05': 'Ávila',
     '06': 'Badajoz', '07': 'Baleares', '08': 'Barcelona', '09': 'Burgos', '10': 'Cáceres',
@@ -18,12 +21,15 @@ class LocationService {
     '51': 'Ceuta', '52': 'Melilla',
   };
 
+  /// Inicializa el servicio cargando y procesando el archivo municipios.csv
   Future<void> init() async {
-    if (_provinceMunicipios.isNotEmpty) return;
+    if (_provinceMunicipios.isNotEmpty) return; // Ya inicializado
 
+    // Cargamos el asset como String
     final rawData = await rootBundle.loadString('municipios.csv');
     List<List<dynamic>> listData = const CsvToListConverter().convert(rawData);
 
+    // Iteramos el CSV saltando la cabecera
     for (var i = 1; i < listData.length; i++) {
       final row = listData[i];
       if (row.length < 3) continue;
@@ -36,22 +42,25 @@ class LocationService {
         if (!_provinceMunicipios.containsKey(provinceName)) {
           _provinceMunicipios[provinceName] = [];
         }
-        // Solo añadir si no existe para evitar duplicados que rompen el Dropdown
+        // Control de duplicados para no romper los DropdownButtons de Flutter
         if (!_provinceMunicipios[provinceName]!.contains(municipio)) {
           _provinceMunicipios[provinceName]!.add(municipio);
         }
       }
     }
 
+    // Ordenamos alfabéticamente cada lista de municipios
     _provinceMunicipios.forEach((key, value) => value.sort());
   }
 
+  /// Devuelve la lista ordenada de todas las provincias disponibles
   List<String> getProvinces() {
     final provinces = _provinceMunicipios.keys.toList();
     provinces.sort();
     return provinces;
   }
 
+  /// Devuelve los municipios asociados a una provincia concreta
   List<String> getMunicipios(String province) {
     return _provinceMunicipios[province] ?? [];
   }

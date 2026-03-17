@@ -5,9 +5,11 @@ import '../models/chat_room.dart';
 import '../services/firebase_service.dart';
 import 'chat_screen.dart';
 
+/// Bandeja de entrada que muestra el listado de conversaciones activas
 class InboxScreen extends StatelessWidget {
   const InboxScreen({super.key});
 
+  /// Formatea la fecha del último mensaje para mostrarla de forma legible
   String _formatDateTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
@@ -28,6 +30,7 @@ class InboxScreen extends StatelessWidget {
       builder: (context, authSnapshot) {
         final user = authSnapshot.data;
 
+        // Si no hay sesión, mostramos mensaje informativo
         if (user == null) {
           return Scaffold(
             appBar: AppBar(title: const Text('Mensajes')),
@@ -41,6 +44,7 @@ class InboxScreen extends StatelessWidget {
             surfaceTintColor: Colors.transparent,
           ),
           body: StreamBuilder<List<ChatRoom>>(
+            // Escuchamos las salas de chat del usuario en tiempo real
             stream: firebaseService.getUserChatRooms(user.uid),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -59,16 +63,21 @@ class InboxScreen extends StatelessWidget {
                   final room = rooms[index];
                   final bool isUnread = room.readStatus[user.uid] == false;
                   final bool isSeller = user.uid == room.sellerId;
+                  
+                  // Identificamos el ID del otro participante
                   final otherUserId = room.participants.firstWhere(
                     (id) => id != user.uid,
                     orElse: () => '',
                   );
 
                   return FutureBuilder<Map<String, dynamic>?>(
+                    // Obtenemos el nombre del otro usuario para mostrarlo en la lista
                     future: firebaseService.getUserData(otherUserId),
                     builder: (context, userSnapshot) {
                       final userData = userSnapshot.data;
                       final otherUserName = userData?['username'] ?? 'Usuario';
+                      // Título dinámico: si soy vendedor, muestro el nombre del interesado.
+                      // Si soy comprador, el título del inmueble.
                       final String displayTitle = isSeller ? otherUserName : room.propertyTitle;
 
                       return Container(
@@ -115,6 +124,7 @@ class InboxScreen extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                           onTap: () {
+                            // Al entrar al chat, marcamos como leído
                             firebaseService.markAsRead(room.id, user.uid);
                             Navigator.push(
                               context,

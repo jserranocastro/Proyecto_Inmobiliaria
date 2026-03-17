@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../models/chat_message.dart';
 import '../services/firebase_service.dart';
 
+/// Pantalla de conversación en tiempo real entre dos usuarios
 class ChatScreen extends StatefulWidget {
   final String chatRoomId;
   final String otherUserId;
@@ -31,11 +32,12 @@ class _ChatScreenState extends State<ChatScreen> {
   final String _currentUserId = FirebaseAuth.instance.currentUser!.uid;
   final ImagePicker _picker = ImagePicker();
 
+  /// Envía un mensaje de texto simple
   void _sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
 
     final message = ChatMessage(
-      id: '',
+      id: '', // Firestore generará el ID del documento
       senderId: _currentUserId,
       receiverId: widget.otherUserId,
       text: _messageController.text.trim(),
@@ -44,13 +46,14 @@ class _ChatScreenState extends State<ChatScreen> {
     );
 
     await _firebaseService.sendMessage(widget.chatRoomId, message);
-    _messageController.clear();
+    _messageController.clear(); // Limpiamos el input tras enviar
   }
 
+  /// Gestiona la selección y envío de imágenes (cámara o galería)
   Future<void> _sendImage(ImageSource source) async {
     final XFile? image = await _picker.pickImage(
       source: source,
-      imageQuality: 50,
+      imageQuality: 50, // Comprimimos para no saturar Firestore/Base64
       maxWidth: 800,
     );
 
@@ -71,6 +74,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  /// Muestra diálogo de confirmación antes de borrar un mensaje propio
   void _deleteMessage(String messageId) async {
     final bool? confirm = await showDialog<bool>(
       context: context,
@@ -95,6 +99,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  /// Selector de origen de imagen (Bottom Sheet)
   void _showImageSourceActionSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -125,6 +130,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Si soy el vendedor, muestro el nombre del interesado. Si soy comprador, el título del anuncio.
     final bool isSeller = _currentUserId == widget.sellerId;
     final String displayTitle = isSeller ? widget.otherUserName : widget.propertyTitle;
 
@@ -146,7 +152,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 final messages = snapshot.data ?? [];
 
                 return ListView.builder(
-                  reverse: true,
+                  reverse: true, // Empezamos por el final (mensajes más recientes abajo)
                   padding: const EdgeInsets.all(16),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
@@ -194,6 +200,7 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
+          // Barra inferior de entrada de texto
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(

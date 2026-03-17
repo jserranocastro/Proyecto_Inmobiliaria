@@ -7,8 +7,9 @@ import '../models/property.dart';
 import '../services/firebase_service.dart';
 import '../services/location_service.dart';
 
+/// Pantalla para crear o editar un anuncio de inmueble
 class AddPropertyScreen extends StatefulWidget {
-  final Property? propertyToEdit;
+  final Property? propertyToEdit; // Si viene informado, la pantalla entra en modo edición
 
   const AddPropertyScreen({super.key, this.propertyToEdit});
 
@@ -22,12 +23,14 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   final LocationService _locationService = LocationService();
   final ImagePicker _picker = ImagePicker();
 
+  // Controladores para los campos del formulario
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _addressController = TextEditingController();
   final _areaController = TextEditingController();
 
+  // Estado del formulario
   String? _selectedProvince;
   String? _selectedCity;
   int _bedrooms = 1;
@@ -37,7 +40,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
   List<String> _provinces = [];
   List<String> _municipios = [];
-  List<String> _base64Images = [];
+  List<String> _base64Images = []; // Guardamos las imágenes codificadas para Firestore
   bool _isLoadingLocations = true;
 
   bool get _isEditing => widget.propertyToEdit != null;
@@ -48,6 +51,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     _loadLocations();
   }
 
+  /// Carga inicial de datos geográficos y pre-rellenado si es edición
   Future<void> _loadLocations() async {
     await _locationService.init();
     
@@ -77,6 +81,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     });
   }
 
+  /// Selecciona una imagen de la galería y la convierte a Base64
   Future<void> _pickImage() async {
     if (_base64Images.length >= 7) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -87,7 +92,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
     final XFile? image = await _picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 50,
+      imageQuality: 50, // Reducimos calidad para ahorrar espacio en Firestore
       maxWidth: 800,
     );
 
@@ -100,6 +105,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     }
   }
 
+  /// Elimina una imagen de la lista temporal
   void _removeImage(int index) {
     setState(() {
       _base64Images.removeAt(index);
@@ -116,6 +122,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     super.dispose();
   }
 
+  /// Valida el formulario y persiste los datos en Firebase
   void _saveProperty() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -177,7 +184,6 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
       appBar: AppBar(
         title: Text(_isEditing ? 'Editar Inmueble' : 'Añadir Inmueble'),
         surfaceTintColor: Colors.transparent,
-        // Forzamos el botón de volver si hay historial
         leading: Navigator.canPop(context) 
           ? IconButton(
               icon: const Icon(Icons.arrow_back),
@@ -194,6 +200,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Selector de imágenes con scroll horizontal
                   const Text('Fotos del inmueble (Máx. 7)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 12),
                   SizedBox(
@@ -249,6 +256,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
+                  // Selector Venta vs Alquiler
                   const Text('¿Qué deseas hacer?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 12),
                   Row(
@@ -291,6 +299,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
+                  // Campos de texto básicos
                   TextFormField(
                     controller: _titleController,
                     decoration: const InputDecoration(labelText: 'Título del anuncio', prefixIcon: Icon(Icons.title)),
@@ -328,6 +337,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
+                  // Selectores de ubicación anidados
                   const Text('Ubicación', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
@@ -358,6 +368,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                     decoration: const InputDecoration(labelText: 'Dirección (Calle, número...)', prefixIcon: Icon(Icons.place_outlined)),
                   ),
                   const SizedBox(height: 24),
+                  // Características técnicas
                   const Text('Características', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 12),
                   Row(
@@ -394,6 +405,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                     onChanged: (val) => setState(() => _type = val!),
                   ),
                   const SizedBox(height: 40),
+                  // Botón de acción final
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

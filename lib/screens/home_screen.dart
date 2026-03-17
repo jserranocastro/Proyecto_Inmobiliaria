@@ -8,6 +8,7 @@ import '../services/preferences_service.dart';
 import 'property_detail_screen.dart';
 import 'add_property_screen.dart';
 
+/// Pantalla principal que muestra el listado de inmuebles según la ubicación seleccionada
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -30,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _initializeData();
+    // Escuchamos cambios en las preferencias de ubicación (ej. desde ajustes)
     PreferencesService.locationNotifier.addListener(_onLocationPreferenceChanged);
   }
 
@@ -39,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  /// Actualiza la UI cuando cambia la ubicación global
   void _onLocationPreferenceChanged() {
     final newLoc = PreferencesService.locationNotifier.value;
     if (mounted) {
@@ -52,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Carga inicial: inicializa el servicio de localización y recupera la última ubicación guardada
   Future<void> _initializeData() async {
     await _locationService.init();
     final provinces = _locationService.getProvinces();
@@ -71,6 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Navega a la pantalla de publicación, verificando sesión previa
   void _onAddProperty() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -88,11 +93,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Despliega el panel inferior para seleccionar provincia y municipio
   void _showChangeLocationSheet() {
     final primaryColor = Theme.of(context).colorScheme.primary;
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
+      isScrollControlled: true, // Permite que el modal crezca con el teclado
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         decoration: const BoxDecoration(
@@ -117,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 24),
               const Text('Cambiar Ubicación', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 24),
+              // Selector de Provincia
               DropdownButtonFormField<String>(
                 isExpanded: true,
                 value: _selectedProvince,
@@ -128,12 +135,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 onChanged: (val) {
                   setSheetState(() {
                     _selectedProvince = val;
-                    _selectedCity = null;
+                    _selectedCity = null; // Reiniciamos ciudad al cambiar provincia
                     _municipios = _locationService.getMunicipios(val!);
                   });
                 },
               ),
               const SizedBox(height: 16),
+              // Selector de Municipio (bloqueado hasta elegir provincia)
               DropdownButtonFormField<String>(
                 isExpanded: true,
                 value: _selectedCity,
@@ -152,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: ElevatedButton(
                   onPressed: _selectedProvince != null && _selectedCity != null
                       ? () {
-                          setState(() {}); 
+                          setState(() {}); // Forzamos reconstrucción del StreamBuilder principal
                           Navigator.pop(context);
                         }
                       : null,
@@ -187,6 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                // Selector de ubicación (Header)
                 GestureDetector(
                   onTap: _showChangeLocationSheet,
                   child: Container(
@@ -239,6 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: (_selectedProvince == null || _selectedCity == null)
                       ? Center(
+                          // Pantalla de bienvenida / Empty state cuando no hay ubicación
                           child: SingleChildScrollView(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
@@ -280,6 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         )
                       : StreamBuilder<List<Property>>(
+                          // Carga de inmuebles en tiempo real desde Firestore
                           stream: _firebaseService.getPropertiesByLocation(_selectedProvince!, _selectedCity!),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -327,6 +338,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
+      // Botón flotante para publicar un nuevo anuncio
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _onAddProperty,
         backgroundColor: primaryColor,

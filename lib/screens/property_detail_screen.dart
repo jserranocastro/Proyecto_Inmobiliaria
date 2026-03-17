@@ -5,6 +5,7 @@ import '../models/property.dart';
 import '../services/firebase_service.dart';
 import 'chat_screen.dart';
 
+/// Pantalla de detalle de un inmueble específico con carrusel de imágenes y contacto
 class PropertyDetailScreen extends StatefulWidget {
   final Property property;
 
@@ -19,9 +20,11 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   int _currentPage = 0;
 
+  /// Inicia el flujo de chat con el vendedor del inmueble
   void _contactSeller() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     
+    // Verificación de sesión
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Debes iniciar sesión para contactar')),
@@ -29,6 +32,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       return;
     }
 
+    // Evitar que un usuario se contacte a sí mismo
     if (currentUser.uid == widget.property.userId) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Este anuncio es tuyo')),
@@ -36,6 +40,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       return;
     }
 
+    // Loader mientras se crea/recupera la sala de chat
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -54,7 +59,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       final sellerName = userData?['username'] ?? 'Vendedor';
 
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context); // Cerramos el loader
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -85,6 +90,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
+          // AppBar flexible con carrusel de imágenes
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
@@ -126,6 +132,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       child: const Icon(Icons.home, size: 100, color: Colors.white),
                     ),
                   
+                  // Flechas de navegación para el carrusel
                   if (property.images.length > 1) ...[
                     Positioned(
                       left: 10,
@@ -167,6 +174,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     ),
                   ],
 
+                  // Indicador de puntos inferior
                   if (property.images.length > 1)
                     Positioned(
                       bottom: 20,
@@ -192,6 +200,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
               ),
             ),
           ),
+          // Contenido descriptivo del inmueble
           SliverList(
             delegate: SliverChildListDelegate([
               Padding(
@@ -213,6 +222,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       style: TextStyle(fontSize: 18, color: Colors.grey[700]),
                     ),
                     const Divider(height: 32),
+                    // Iconos de características
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -231,7 +241,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       property.description,
                       style: const TextStyle(fontSize: 16, height: 1.5),
                     ),
-                    const SizedBox(height: 100), 
+                    const SizedBox(height: 100), // Espacio para no quedar tapado por el botón de abajo
                   ],
                 ),
               ),
@@ -239,6 +249,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           ),
         ],
       ),
+      // Botón persistente de contacto
       bottomSheet: Container(
         padding: const EdgeInsets.all(16),
         width: double.infinity,
@@ -261,6 +272,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 }
 
+/// Widget interno para mostrar iconos con texto (habitaciones, baños, m2)
 class _FeatureIcon extends StatelessWidget {
   final IconData icon;
   final String label;

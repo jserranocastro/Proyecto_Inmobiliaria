@@ -9,6 +9,7 @@ import '../widgets/property_card.dart';
 import 'add_property_screen.dart';
 import 'main_screen.dart';
 
+/// Pantalla encargada del Login, Registro (por pasos) y Gestión del Perfil de usuario
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
 
@@ -23,6 +24,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _locationService = LocationService();
   final _prefsService = PreferencesService();
   
+  // Controladores para los formularios
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _usernameController = TextEditingController();
@@ -30,11 +32,11 @@ class _AuthScreenState extends State<AuthScreen> {
   final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController();
   
-  bool _isLogin = true;
+  bool _isLogin = true; // Alterna entre vista de login y registro
   bool _isLoading = false;
   bool _obscurePassword = true;
-  int _currentStep = 0;
-  bool _registrationSuccess = false;
+  int _currentStep = 0; // Paso actual del registro (0 a 3)
+  bool _registrationSuccess = false; // Flag para mostrar pantalla de bienvenida post-registro
 
   String? _defaultProvince;
   String? _defaultCity;
@@ -45,6 +47,7 @@ class _AuthScreenState extends State<AuthScreen> {
     _loadDefaultLocation();
   }
 
+  /// Recupera la ubicación preferida guardada localmente (SharedPreferences)
   Future<void> _loadDefaultLocation() async {
     final loc = await _prefsService.getDefaultLocation();
     setState(() {
@@ -53,6 +56,7 @@ class _AuthScreenState extends State<AuthScreen> {
     });
   }
 
+  /// Valida si un campo (email, username, phone) ya existe en Firestore para evitar duplicados
   Future<bool> _isUnique(String field, String value) async {
     final query = await _firestore
         .collection('users')
@@ -61,6 +65,7 @@ class _AuthScreenState extends State<AuthScreen> {
     return query.docs.isEmpty;
   }
 
+  /// Lógica de navegación entre pasos del registro con validaciones intermedias
   void _nextStep() async {
     if (_currentStep == 0) {
       if (_firstNameController.text.trim().isEmpty || _lastNameController.text.trim().isEmpty) {
@@ -114,7 +119,7 @@ class _AuthScreenState extends State<AuthScreen> {
         _showError('El número de teléfono ya está en uso');
         return;
       }
-      await _register();
+      await _register(); // Si todo es correcto, procedemos al registro final
     }
   }
 
@@ -122,6 +127,7 @@ class _AuthScreenState extends State<AuthScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  /// Crea el usuario en Firebase Auth y guarda sus datos adicionales en Firestore
   Future<void> _register() async {
     try {
       final userCredential = await _auth.createUserWithEmailAndPassword(
@@ -129,6 +135,7 @@ class _AuthScreenState extends State<AuthScreen> {
         password: _passwordController.text.trim(),
       );
 
+      // Guardamos el perfil extendido
       await _firestore.collection('users').doc(userCredential.user!.uid).set({
         'firstName': _firstNameController.text.trim(),
         'lastName': _lastNameController.text.trim(),
@@ -138,9 +145,10 @@ class _AuthScreenState extends State<AuthScreen> {
         'createdAt': Timestamp.now(),
       });
 
+      // Sincronizamos el nombre visible de Firebase Auth
       await userCredential.user!.updateDisplayName(_usernameController.text.trim());
       
-      // Al registrar un usuario nuevo, limpiamos cualquier ubicación previa guardada en el dispositivo
+      // Limpiamos ubicación previa para que el nuevo usuario configure la suya
       await _prefsService.clearDefaultLocation();
       await _loadDefaultLocation();
       
@@ -154,6 +162,7 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  /// Inicia sesión (soporta tanto Email como Nombre de Usuario)
   Future<void> _login() async {
     final usernameOrEmail = _usernameController.text.trim();
     final password = _passwordController.text.trim();
@@ -167,6 +176,7 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       String email = usernameOrEmail;
 
+      // Si no parece un email, buscamos el correo asociado a ese nombre de usuario
       if (!usernameOrEmail.contains('@')) {
         final userQuery = await _firestore
             .collection('users')
@@ -208,13 +218,13 @@ class _AuthScreenState extends State<AuthScreen> {
             : null,
       ),
       body: StreamBuilder<User?>(
-        stream: _auth.authStateChanges(),
+        stream: _auth.authStateChanges(), // Escuchamos el estado de sesión
         builder: (context, snapshot) {
           if (snapshot.hasData && (_isLogin || _registrationSuccess)) {
             if (_registrationSuccess) {
-              return _buildWelcomeScreen();
+              return _buildWelcomeScreen(); // Pantalla post-registro
             }
-            return _buildProfileScreen(snapshot.data!);
+            return _buildProfileScreen(snapshot.data!); // Perfil de usuario
           }
           
           return _isLogin ? _buildLoginView() : _buildRegisterView();
@@ -223,6 +233,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  /// Vista de éxito tras completar el registro
   Widget _buildWelcomeScreen() {
     return Center(
       child: Padding(
@@ -286,6 +297,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  /// Formulario de inicio de sesión
   Widget _buildLoginView() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(32.0),
@@ -349,6 +361,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  /// Vista de registro fraccionada por pasos (Stepped UI)
   Widget _buildRegisterView() {
     return Column(
       children: [
@@ -401,7 +414,6 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(height: 32),
                 _buildCurrentStepFields(),
                 const SizedBox(height: 40),
-                // Botones inferiores eliminados para consistencia con la navegación superior
               ],
             ),
           ),
@@ -420,6 +432,7 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  /// Genera los campos de texto correspondientes al paso actual del registro
   Widget _buildCurrentStepFields() {
     switch (_currentStep) {
       case 0:
@@ -482,9 +495,11 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  /// Vista de gestión del perfil de usuario y sus anuncios publicados
   Widget _buildProfileScreen(User user) {
     return Column(
       children: [
+        // Header del perfil
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -537,6 +552,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ],
               ),
               const SizedBox(height: 20),
+              // Botón para configurar la ubicación por defecto
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
@@ -568,6 +584,7 @@ class _AuthScreenState extends State<AuthScreen> {
             ],
           ),
         ),
+        // Sección de "Mis Anuncios"
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
           child: Row(
@@ -615,6 +632,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         property: property,
                         onTap: () {},
                       ),
+                      // Botones flotantes de edición/borrado sobre la tarjeta
                       Positioned(
                         top: 12,
                         right: 12,
@@ -652,6 +670,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  /// Confirmación de cierre de sesión con limpieza de preferencias locales
   void _confirmLogout(BuildContext context) {
     showDialog(
       context: context,
@@ -665,7 +684,6 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              // Limpiamos la ubicación al cerrar sesión para evitar que el siguiente usuario la herede
               await _prefsService.clearDefaultLocation();
               await _auth.signOut();
               if (mounted) {
@@ -691,6 +709,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  /// Confirmación de borrado de un inmueble propio
   void _confirmDelete(BuildContext context, String propertyId) {
     showDialog(
       context: context,
@@ -733,6 +752,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  /// Diálogo para que el usuario elija su provincia/municipio por defecto
   void _showLocationDialog() async {
     await _locationService.init();
     String? selectedProv = _defaultProvince;

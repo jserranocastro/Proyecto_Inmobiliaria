@@ -4,6 +4,7 @@ import '../widgets/property_card.dart';
 import '../services/firebase_service.dart';
 import 'property_detail_screen.dart';
 
+/// Pantalla que muestra el listado de inmuebles filtrados tras una búsqueda
 class SearchResultsScreen extends StatelessWidget {
   final String province;
   final String city;
@@ -36,6 +37,7 @@ class SearchResultsScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
+          // Cabecera con resumen de los filtros aplicados (Ubicación y modo)
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -62,6 +64,7 @@ class SearchResultsScreen extends StatelessWidget {
           ),
           Expanded(
             child: StreamBuilder<List<Property>>(
+              // Ejecutamos la búsqueda con todos los criterios seleccionados
               stream: firebaseService.searchProperties(
                 city: city,
                 minPrice: priceRange.start,
@@ -86,6 +89,7 @@ class SearchResultsScreen extends StatelessWidget {
 
                 final properties = snapshot.data ?? [];
 
+                // Empty state por si no hay coincidencias
                 if (properties.isEmpty) {
                   return Center(
                     child: Column(

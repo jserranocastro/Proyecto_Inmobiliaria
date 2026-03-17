@@ -5,6 +5,7 @@ import '../models/property.dart';
 import '../widgets/property_card.dart';
 import 'property_detail_screen.dart';
 
+/// Pantalla que muestra los inmuebles guardados como favoritos por el usuario
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
 
@@ -17,6 +18,7 @@ class FavoritesScreen extends StatelessWidget {
       builder: (context, authSnapshot) {
         final user = authSnapshot.data;
 
+        // Si no hay sesión, bloqueamos la vista
         if (user == null) {
           return Scaffold(
             appBar: AppBar(title: const Text('Mis Favoritos')),
@@ -43,6 +45,7 @@ class FavoritesScreen extends StatelessWidget {
             surfaceTintColor: Colors.transparent,
           ),
           body: StreamBuilder<List<String>>(
+            // Primero obtenemos la lista de IDs favoritos del perfil del usuario
             stream: firebaseService.getUserFavorites(user.uid),
             builder: (context, favSnapshot) {
               if (favSnapshot.connectionState == ConnectionState.waiting) {
@@ -77,6 +80,7 @@ class FavoritesScreen extends StatelessWidget {
               }
 
               return StreamBuilder<List<Property>>(
+                // Con los IDs, recuperamos la información completa de cada inmueble
                 stream: firebaseService.getFavoriteProperties(favoriteIds),
                 builder: (context, propertiesSnapshot) {
                   if (propertiesSnapshot.connectionState == ConnectionState.waiting) {

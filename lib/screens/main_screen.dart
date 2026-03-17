@@ -7,6 +7,7 @@ import 'favorites_screen.dart';
 import 'inbox_screen.dart';
 import '../services/firebase_service.dart';
 
+/// Contenedor principal de la aplicación que gestiona la navegación por pestañas (BottomNavigationBar)
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -15,9 +16,10 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 0; // Índice de la pestaña activa
   final FirebaseService _firebaseService = FirebaseService();
 
+  // Lista de pantallas asociadas a cada pestaña del menú inferior
   final List<Widget> _screens = [
     const HomeScreen(),
     const FavoritesScreen(),
@@ -35,6 +37,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // IndexedStack mantiene el estado de todas las pantallas para evitar recargas al cambiar de pestaña
       body: IndexedStack(
         index: _selectedIndex,
         children: _screens,
@@ -49,7 +52,7 @@ class _MainScreenState extends State<MainScreen> {
             onTap: _onItemTapped,
             selectedItemColor: Theme.of(context).colorScheme.primary,
             unselectedItemColor: Colors.grey,
-            type: BottomNavigationBarType.fixed,
+            type: BottomNavigationBarType.fixed, // Mantiene los labels visibles siempre
             items: [
               const BottomNavigationBarItem(
                 icon: Icon(Icons.home_outlined),
@@ -65,6 +68,7 @@ class _MainScreenState extends State<MainScreen> {
                 icon: Icon(Icons.search),
                 label: 'Buscar',
               ),
+              // Ítem de Mensajes con indicador de notificaciones (badge)
               BottomNavigationBarItem(
                 icon: user == null 
                   ? const Icon(Icons.message_outlined)

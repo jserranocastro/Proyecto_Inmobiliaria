@@ -3,6 +3,7 @@ import '../models/property.dart';
 import '../services/location_service.dart';
 import 'search_results_screen.dart';
 
+/// Pantalla de búsqueda avanzada con filtros de ubicación, precio y características
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -13,6 +14,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final LocationService _locationService = LocationService();
 
+  // Variables de estado para los filtros
   String? _selectedProvince;
   String? _selectedCity;
   RangeValues _priceRange = const RangeValues(0, 1000000);
@@ -31,6 +33,7 @@ class _SearchScreenState extends State<SearchScreen> {
     _loadLocations();
   }
 
+  /// Carga la lista de provincias al iniciar la pantalla
   Future<void> _loadLocations() async {
     await _locationService.init();
     setState(() {
@@ -41,6 +44,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // La búsqueda requiere obligatoriamente una ubicación seleccionada
     bool canSearch = _selectedProvince != null && _selectedCity != null;
     final primaryColor = Theme.of(context).colorScheme.primary;
 
@@ -62,6 +66,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: primaryColor),
                   ),
                   const SizedBox(height: 16),
+                  // Selector de Provincia
                   DropdownButtonFormField<String>(
                     value: _selectedProvince,
                     decoration: const InputDecoration(
@@ -72,12 +77,13 @@ class _SearchScreenState extends State<SearchScreen> {
                     onChanged: (val) {
                       setState(() {
                         _selectedProvince = val;
-                        _selectedCity = null;
+                        _selectedCity = null; // Reset de ciudad al cambiar provincia
                         _municipios = _locationService.getMunicipios(val!);
                       });
                     },
                   ),
                   const SizedBox(height: 16),
+                  // Selector de Municipio
                   DropdownButtonFormField<String>(
                     value: _selectedCity,
                     decoration: const InputDecoration(
@@ -93,6 +99,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   const SizedBox(height: 32),
                   const Text('Filtros adicionales', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 16),
+                  // Selector Alquiler vs Compra
                   Row(
                     children: [
                       Expanded(
@@ -115,6 +122,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
+                  // Slider de rango de precios
                   Text('Rango de precio: ${_priceRange.start.round()}€ - ${_priceRange.end.round()}€', 
                     style: const TextStyle(fontWeight: FontWeight.w500)),
                   RangeSlider(
@@ -126,6 +134,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     onChanged: (values) => setState(() => _priceRange = values),
                   ),
                   const SizedBox(height: 16),
+                  // Filtros de habitaciones y baños mínimos
                   Row(
                     children: [
                       Expanded(
@@ -148,6 +157,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
+                  // Selector de tipo de inmueble (opcional)
                   DropdownButtonFormField<PropertyType>(
                     value: _selectedType,
                     decoration: const InputDecoration(labelText: 'Tipo'),
@@ -161,6 +171,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     onChanged: (val) => setState(() => _selectedType = val),
                   ),
                   const SizedBox(height: 40),
+                  // Botón para ejecutar la búsqueda
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

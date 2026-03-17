@@ -1,8 +1,10 @@
+/// Tipos de inmuebles disponibles en la plataforma
 enum PropertyType { chalet, piso, casa, atico, duplex }
 
+/// Modelo que representa una propiedad o anuncio inmobiliario
 class Property {
   final String id;
-  final String userId; // Añadido para saber quién publicó el anuncio
+  final String userId; // ID del usuario que publicó el anuncio
   final String title;
   final String description;
   final double price;
@@ -12,7 +14,7 @@ class Property {
   final int bedrooms;
   final int bathrooms;
   final double area; 
-  final List<String> images;
+  final List<String> images; // Lista de imágenes en base64
   final PropertyType type;
   final bool isForRent;
 
@@ -33,6 +35,7 @@ class Property {
     required this.isForRent,
   });
 
+  /// Convierte el objeto a un Map para guardarlo en Firestore
   Map<String, dynamic> toMap() {
     return {
       'userId': userId,
@@ -46,12 +49,14 @@ class Property {
       'bathrooms': bathrooms,
       'area': area,
       'images': images,
-      'type': type.index,
+      'type': type.index, // Guardamos el índice del enum
       'isForRent': isForRent,
     };
   }
 
+  /// Crea una instancia de Property a partir de un documento de Firestore
   factory Property.fromMap(String id, Map<String, dynamic> map) {
+    // Control de seguridad para el índice del enum
     int typeIndex = 0;
     if (map['type'] != null) {
       int val = (map['type'] as num).toInt();

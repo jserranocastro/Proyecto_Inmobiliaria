@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/property.dart';
 import '../services/firebase_service.dart';
 
+/// Tarjeta visual para mostrar un resumen de la propiedad en las listas
 class PropertyCard extends StatefulWidget {
   final Property property;
   final VoidCallback onTap;
@@ -15,9 +16,10 @@ class PropertyCard extends StatefulWidget {
 }
 
 class _PropertyCardState extends State<PropertyCard> {
-  int _currentImageIndex = 0;
+  int _currentImageIndex = 0; // Para el carrusel de imágenes
   final FirebaseService _firebaseService = FirebaseService();
 
+  /// Maneja la lógica de añadir/quitar de favoritos
   void _toggleFavorite() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -26,6 +28,7 @@ class _PropertyCardState extends State<PropertyCard> {
       );
       return;
     }
+    // Llamada al servicio para persistir el cambio
     await _firebaseService.toggleFavorite(user.uid, widget.property.id);
   }
 
@@ -56,7 +59,7 @@ class _PropertyCardState extends State<PropertyCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Contenedor de la imagen
+                // Sección superior: Imagen y botones flotantes
                 Stack(
                   children: [
                     SizedBox(
@@ -71,6 +74,7 @@ class _PropertyCardState extends State<PropertyCard> {
                                 });
                               },
                               itemBuilder: (context, index) {
+                                // Decodificamos la imagen guardada en base64
                                 return Image.memory(
                                   base64Decode(widget.property.images[index]),
                                   fit: BoxFit.cover,
@@ -85,7 +89,7 @@ class _PropertyCardState extends State<PropertyCard> {
                               child: const Center(child: Icon(Icons.home_work_outlined, size: 50, color: Colors.grey)),
                             ),
                     ),
-                    // Botón de Favorito
+                    // Botón de Favorito (corazón)
                     Positioned(
                       top: 16,
                       left: 16,
@@ -114,6 +118,7 @@ class _PropertyCardState extends State<PropertyCard> {
                           }
                         ),
                     ),
+                    // Etiqueta del tipo de inmueble (Venta/Alquiler ya se ve en el precio)
                     Positioned(
                       top: 16,
                       right: 16,
@@ -134,6 +139,7 @@ class _PropertyCardState extends State<PropertyCard> {
                         ),
                       ),
                     ),
+                    // Indicador de puntos para el carrusel de imágenes
                     if (widget.property.images.length > 1)
                       Positioned(
                         bottom: 10,
@@ -157,6 +163,7 @@ class _PropertyCardState extends State<PropertyCard> {
                       ),
                   ],
                 ),
+                // Sección inferior: Detalles del inmueble
                 Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -200,6 +207,7 @@ class _PropertyCardState extends State<PropertyCard> {
                       const SizedBox(height: 16),
                       Divider(color: Colors.grey[100], height: 1),
                       const SizedBox(height: 16),
+                      // Fila de iconos con características rápidas
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -219,6 +227,7 @@ class _PropertyCardState extends State<PropertyCard> {
     );
   }
 
+  /// Helper para construir los items de características (habitaciones, metros, etc)
   Widget _buildInfoItem(IconData icon, String label, Color color) {
     return Row(
       children: [
